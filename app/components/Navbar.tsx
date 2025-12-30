@@ -1,10 +1,13 @@
 "use client";
 
+import { auth } from "@/lib/auth";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-export const Navbar = () => {
+type Session = typeof auth.$Infer.Session;
+
+export default function Navbar({ session }: { session: Session | null }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -15,18 +18,20 @@ export const Navbar = () => {
           <span className="text-[#0018F9] font-bold text-lg">Log</span>
         </a>
 
-        <div className="hidden md:flex justify-between gap-3">
-          <Link href="/login">
-            <button className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]">
-              Login
-            </button>
-          </Link>
-          <Link href="/register">
-            <button className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]">
-              Sign up for free
-            </button>
-          </Link>
-        </div>
+        {!session && (
+          <div className="hidden md:flex justify-between gap-3">
+            <Link href="/auth">
+              <button className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]">
+                Login
+              </button>
+            </Link>
+            <Link href="/auth">
+              <button className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]">
+                Sign up for free
+              </button>
+            </Link>
+          </div>
+        )}
 
         <button
           onClick={() => setOpen(!open)}
@@ -57,4 +62,4 @@ export const Navbar = () => {
       )}
     </div>
   );
-};
+}
