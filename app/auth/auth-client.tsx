@@ -42,13 +42,21 @@ export default function AuthClientPage() {
     try {
       if (isSignIn) {
         const result = await signIn(email, password);
-        if (!result.user) {
+        if (result?.user) {
+          router.refresh();
+          router.push("/dashboard");
+        } else {
           setError("Invalid email or password");
+          setIsLoading(false);
         }
       } else {
         const result = await signUp(email, password, name);
-        if (!result.user) {
+        if (result?.user) {
+          router.refresh();
+          router.push("/dashboard");
+        } else {
           setError("Failed to create account");
+          setIsLoading(false);
         }
       }
     } catch (err) {
@@ -179,7 +187,7 @@ export default function AuthClientPage() {
                     required={!isSignIn}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                     placeholder="Enter your full name"
                   />
                 </div>

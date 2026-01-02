@@ -12,6 +12,7 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "better-auth": "^1.4.9",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "pg": "^8.16.3",

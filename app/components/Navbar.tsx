@@ -36,7 +36,7 @@ export default function Navbar({ session }: { session: Session | null }) {
         )}
 
         {isLoggedIn && (
-          <Link href="/dashboard" className="font-semibold">
+          <Link href="/auth" className="font-semibold">
             Dashboard
           </Link>
         )}
@@ -53,7 +53,7 @@ export default function Navbar({ session }: { session: Session | null }) {
       {open && (
         <div className="md:hidden border-t px-4 pb-4">
           <Link
-            href="/login"
+            href="/auth"
             className="block py-2 uppercase"
             onClick={() => setOpen(false)}
           >
