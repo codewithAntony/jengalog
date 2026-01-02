@@ -10,15 +10,17 @@ type Session = typeof auth.$Infer.Session;
 export default function Navbar({ session }: { session: Session | null }) {
   const [open, setOpen] = useState(false);
 
+  const isLoggedIn = !!session?.user;
+
   return (
-    <div className="w-full fixed top-0 left-0 z-50 bg-[#FEFEFE] shadow-md">
+    <div className="w-full sticky top-0 left-0 z-50 bg-[#FEFEFE] shadow-md">
       <div className="mx-auto max-w-7xl flex justify-between items-center px-4 py-3">
         <a href="#home" className="cursor-pointer">
           <span className="font-bold text-[#2E2E2E] text-lg ">Jenga</span>
           <span className="text-[#0018F9] font-bold text-lg">Log</span>
         </a>
 
-        {!session && (
+        {!isLoggedIn && (
           <div className="hidden md:flex justify-between gap-3">
             <Link href="/auth">
               <button className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]">
@@ -31,6 +33,12 @@ export default function Navbar({ session }: { session: Session | null }) {
               </button>
             </Link>
           </div>
+        )}
+
+        {isLoggedIn && (
+          <Link href="/dashboard" className="font-semibold">
+            Dashboard
+          </Link>
         )}
 
         <button

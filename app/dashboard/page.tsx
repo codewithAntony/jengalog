@@ -8,7 +8,7 @@ export default async function DashboardPage() {
     headers: await headers(),
   });
 
-  if (!session) {
+  if (!session?.user) {
     redirect("/auth");
   }
   return <DashboardClientPage />;
