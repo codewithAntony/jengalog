@@ -7,10 +7,13 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="">
-      <AdminHeader />
+    <div className="flex h-screen bg-[#121212] overflow-hidden">
       <AdminSidebar />
-      <main>{children}</main>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminHeader />
+
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      </div>
     </div>
   );
 }

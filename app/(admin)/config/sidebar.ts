@@ -20,7 +20,7 @@ export interface SidebarItem {
 export const SidebarItems: SidebarItem[] = [
   {
     name: "Dashboard",
-    href: "/dashboard",
+    href: "/admin-dashboard/overview",
     icon: House,
   },
   {
