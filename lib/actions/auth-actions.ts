@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "../auth";
+import { redirect } from "next/navigation";
 
 export const signUp = async (email: string, password: string, name: string) => {
   const result = await auth.api.signUpEmail({
@@ -26,6 +27,19 @@ export const signIn = async (email: string, password: string) => {
   });
 
   return result;
+};
+
+export const signInSocial = async (provider: "google") => {
+  const { url } = await auth.api.signInSocial({
+    body: {
+      provider,
+      callbackURL: "/dashboard",
+    },
+  });
+
+  if (url) {
+    redirect(url);
+  }
 };
 
 export const signOut = async () => {
