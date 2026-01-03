@@ -25,7 +25,7 @@ export const SidebarItems: SidebarItem[] = [
   },
   {
     name: "Products",
-    href: "/dashboard/products",
+    href: "/admin-dashboard/products",
     icon: ShoppingBag,
   },
   {
