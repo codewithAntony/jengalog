@@ -30,37 +30,37 @@ export const SidebarItems: SidebarItem[] = [
   },
   {
     name: "Clients",
-    href: "/dashboard/clients",
+    href: "/admin-dashboard/user",
     icon: Users,
   },
   {
     name: "Sales",
-    href: "/dashboard/sales",
+    href: "/admin-dashboard/sales",
     icon: DollarSign,
   },
   {
     name: "Orders",
-    href: "/dashboard/orders",
+    href: "/admin-dashboard/orders",
     icon: ShoppingCart,
   },
   {
     name: "Messages",
-    href: "/dashboard/messages",
+    href: "/admin-dashboard/messages",
     icon: Mail,
   },
   {
     name: "Notifications",
-    href: "/dashboard/notifications",
+    href: "/admin-dashboard/notifications",
     icon: Bell,
   },
   {
     name: "Settings",
-    href: "/dashboard/settings",
+    href: "/admin-dashboard/settings",
     icon: Settings,
   },
   {
     name: "Help",
-    href: "/dashboard/help",
+    href: "/admin-dashboard/help",
     icon: Info,
   },
 ];

@@ -18,7 +18,7 @@ type Product = {
 };
 
 export const ProductsTable = () => {
-  const [products] = useState<Product[]>(productData);
+  const [products] = useState<Product[]>(productData.products);
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredProducts = useMemo(() => {

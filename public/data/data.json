@@ -1,47 +1,86 @@
-[
-  {
-    "id": "A7F3D67",
-    "name": "Smartphone",
-    "category": "Electronics",
-    "price": 699.99,
-    "stock": 120,
-    "sales": 5200,
-    "image": "/images/products/smartphone.jpeg"
-  },
-  {
-    "id": "B6E4F24",
-    "name": "Laptop",
-    "category": "Electronics",
-    "price": 699.99,
-    "stock": 75,
-    "sales": 4320,
-    "image": "/images/products/laptop.jpeg"
-  },
-  {
-    "id": "#C5D2A89",
-    "name": "Coffee Table",
-    "category": "Home",
-    "price": 249.99,
-    "stock": 95,
-    "sales": 3100,
-    "image": "/images/products/coffee-table.jpeg"
-  },
-  {
-    "id": "D4B7C34",
-    "name": "Mouse",
-    "category": "Electronics",
-    "price": 49.99,
-    "stock": 180,
-    "sales": 2500,
-    "image": "/images/products/mouse.jpg"
-  },
-  {
-    "id": "#E3A5623",
-    "name": "Running Shoes",
-    "category": "Sports",
-    "price": 119.99,
-    "stock": 200,
-    "sales": 2000,
-    "image": "/images/products/shoes.jpeg"
-  }
-]
+{
+  "products": [
+    {
+      "id": "A7F3D67",
+      "name": "Smartphone",
+      "category": "Electronics",
+      "price": 699.99,
+      "stock": 120,
+      "sales": 5200,
+      "image": "/images/products/smartphone.jpeg"
+    },
+    {
+      "id": "B6E4F24",
+      "name": "Laptop",
+      "category": "Electronics",
+      "price": 699.99,
+      "stock": 75,
+      "sales": 4320,
+      "image": "/images/products/laptop.jpeg"
+    },
+    {
+      "id": "#C5D2A89",
+      "name": "Coffee Table",
+      "category": "Home",
+      "price": 249.99,
+      "stock": 95,
+      "sales": 3100,
+      "image": "/images/products/coffee-table.jpeg"
+    },
+    {
+      "id": "D4B7C34",
+      "name": "Mouse",
+      "category": "Electronics",
+      "price": 49.99,
+      "stock": 180,
+      "sales": 2500,
+      "image": "/images/products/mouse.jpg"
+    },
+    {
+      "id": "#E3A5623",
+      "name": "Running Shoes",
+      "category": "Sports",
+      "price": 119.99,
+      "stock": 200,
+      "sales": 2000,
+      "image": "/images/products/shoes.jpeg"
+    }
+  ],
+  "clients": [
+    {
+      "name": "Kevin Omollo",
+      "email": "kevin@gmail.com",
+      "phoneNumber": "+254722000340",
+      "country": "Kenya",
+      "image": "/images/clients/omollo.jpg"
+    },
+    {
+      "name": "John Doe",
+      "email": "doe@gmail.com",
+      "phoneNumber": "+254721990340",
+      "country": "Kenya",
+      "image": "/images/clients/omollo.jpg"
+    },
+    {
+      "name": "Mary Muthoni",
+      "email": "mary@gmail.com",
+      "phoneNumber": "+254799700340",
+      "country": "Kenya",
+      "image": "/images/clients/swanjiru.jpg"
+    },
+    {
+      "name": "Shiphrah Wanjiru",
+      "email": "swanji@gmail.com",
+      "phoneNumber": "+254722000097",
+      "country": "Kenya",
+      "image": "/images/clients/swanjiru.jpg"
+    },
+    {
+      "name": "Bash Bien",
+      "email": "Bash@gmail.com",
+      "phoneNumber": "+254726889240",
+      "country": "Kenya",
+      "image": "/images/clients/omollo.jpg"
+    }
+  ]
+}
