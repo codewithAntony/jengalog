@@ -82,5 +82,74 @@
       "country": "Kenya",
       "image": "/images/clients/omollo.jpg"
     }
+  ],
+  "orders": [
+    {
+      "id": "#C5D2A89",
+      "client": "John Mwangi",
+      "email": "john@gmail.com",
+      "total": 245.75,
+      "status": "Delivered",
+      "date": "02/01/2025",
+      "country": "Kenya"
+    },
+    {
+      "id": "#B53J2K2",
+      "client": "Sarah Mwangi",
+      "email": "john@gmail.com",
+      "total": 245.75,
+      "status": "Pending",
+      "date": "02/01/2025",
+      "country": "Kenya"
+    },
+    {
+      "id": "#C5D2779",
+      "client": "John Mwangi",
+      "email": "john@gmail.com",
+      "total": 245.75,
+      "status": "Delivered",
+      "date": "02/01/2025",
+      "country": "Kenya"
+    },
+    {
+      "id": "#CDCRA89",
+      "client": "John Mwangi",
+      "email": "john@gmail.com",
+      "total": 245.75,
+      "status": "Cancelled",
+      "date": "02/01/2025",
+      "country": "Kenya"
+    },
+    {
+      "id": "#C345A89",
+      "client": "John Mwangi",
+      "email": "john@gmail.com",
+      "total": 245.75,
+      "status": "Delivered",
+      "date": "02/01/2025",
+      "country": "Kenya"
+    }
+  ],
+  "orderStats": [
+    {
+      "name": "Total Orders",
+      "value": 3,
+      "icon": "ShoppingBag"
+    },
+    {
+      "name": "Delivered",
+      "value": 1,
+      "icon": "CheckCircle"
+    },
+    {
+      "name": "Pending",
+      "value": 1,
+      "icon": "Clock"
+    },
+    {
+      "name": "Cancelled",
+      "value": 1,
+      "icon": "Ban"
+    }
   ]
 }
