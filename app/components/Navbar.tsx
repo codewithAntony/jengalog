@@ -37,7 +37,7 @@ export default function Navbar({ session }: { session: Session | null }) {
 
         {isLoggedIn && (
           <Link href="/auth" className="font-semibold">
-            Dashboard
+            login
           </Link>
         )}
 

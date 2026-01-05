@@ -1,10 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
 import ke from "../../../public/images/ke.png";
 import manager from "../../../public/images/manager.png";
 import { Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 const AdminHeader = () => {
+  const router = useRouter();
+
   return (
     <header className="bg-[#1e1e1e] shadow-lg border-b border-[#1f1f1f] mx-4 sm:mx-6 lg:mx-8 mt-4 mb-2 rounded-lg">
       <div className="w-full py-4 px-4 sm:px-6 flex items-center justify-between">
@@ -36,6 +42,17 @@ const AdminHeader = () => {
             <span className="hidden sm:block text-gray-100 font-medium">
               Ken Wa Maria
             </span>
+
+            <button
+              className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]"
+              onClick={async () => {
+                const supabase = getSupabaseBrowserClient();
+                await supabase.auth.signOut();
+                window.location.href = "/auth";
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>
