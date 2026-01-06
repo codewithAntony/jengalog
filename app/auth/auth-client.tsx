@@ -22,17 +22,13 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
   const router = useRouter();
 
   async function handleGoogleLogin() {
-    setIsLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/admin-dashboard/overview`,
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: false,
       },
     });
-    if (error) {
-      setStatus(error.message);
-      setIsLoading(false);
-    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

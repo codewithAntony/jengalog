@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -31,7 +31,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/admin-dashboard")) {
+  if (request.nextUrl.pathname.startsWith("/auth/callback")) {
+    return response;
+  }
+
+  if (
+    !user &&
+    request.nextUrl.pathname.startsWith("/admin-dashboard/overview")
+  ) {
     return NextResponse.redirect(new URL("/auth", request.url));
   }
 
