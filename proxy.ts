@@ -27,32 +27,44 @@ export async function proxy(request: NextRequest) {
     }
   );
 
+  const path = request.nextUrl.pathname;
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/auth/callback")) {
-    return response;
-  }
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-  if (
-    !user &&
-    request.nextUrl.pathname.startsWith("/admin-dashboard/overview")
-  ) {
-    return NextResponse.redirect(new URL("/auth", request.url));
-  }
+    const role = profile?.role || "client";
 
-  if (user && request.nextUrl.pathname.startsWith("/auth")) {
-    return NextResponse.redirect(
-      new URL("/admin-dashboard/overview", request.url)
-    );
+    if (path.startsWith("/admin-dashboard") && role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (path === "/dashboard" && role === "admin") {
+      return NextResponse.redirect(
+        new URL("/admin-dashboard/overview", request.url)
+      );
+    }
+
+    if (path.startsWith("/auth")) {
+      const dest =
+        role === "admin" ? "/admin-dashboard/overview" : "/dashboard";
+      return NextResponse.redirect(new URL(dest, request.url));
+    }
+  } else {
+    const isProtectedRoute =
+      path.startsWith("/admin-dashboard") || path.startsWith("/dashboard");
+
+    if (isProtectedRoute) {
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
   }
 
   return response;
 }
-
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
-};

@@ -57,7 +57,7 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
       if (error) {
         setStatus(error.message);
       } else {
-        router.push("/admin-dashboard/overview");
+        router.refresh();
       }
     }
     setIsLoading(false);

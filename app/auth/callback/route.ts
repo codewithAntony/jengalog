@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/admin-dashboard/overview";
 
   if (code) {
     const cookieStore = await cookies();
@@ -22,17 +21,32 @@ export async function GET(request: Request) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               );
-            } catch {}
+            } catch (error) {}
           },
         },
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!authError && user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const role = profile?.role || "client";
+
+      const redirectPath =
+        role === "admin" ? "/admin-dashboard/overview" : "/dashboard";
+
+      return NextResponse.redirect(new URL(redirectPath, origin));
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth?error=auth-code-error`);
+  return NextResponse.redirect(new URL("/auth?error=auth-failed", origin));
 }
