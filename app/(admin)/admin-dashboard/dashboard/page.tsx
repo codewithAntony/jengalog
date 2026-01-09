@@ -1,52 +1,129 @@
 "use client";
 
-import React, { useState } from "react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Plus, MoreVertical, Pencil, Trash2, Upload, X } from "lucide-react";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { convertBlobUrlToFile } from "@/lib/utils/convertBlobUrlToFile";
+import { uploadImage } from "@/lib/supabase/storage/client";
 
-// --- Types ---
 type Step = "DASHBOARD" | "PROJECT_NAME" | "PLAN_SETUP" | "FOLDERS" | "DETAILS";
 
 interface Project {
   id: string;
   name: string;
-  clientName: string;
+  client_name: string;
   notes: string;
   folders: string[];
-  timestamp: string;
+  image_url?: string;
+  created_at: string;
 }
 
-export default function SiteCamProjectManager() {
+export default function page() {
   const [currentStep, setCurrentStep] = useState<Step>("DASHBOARD");
   const [projects, setProjects] = useState<Project[]>([
     {
       id: "1",
       name: "Example Project",
-      clientName: "Default Client",
+      client_name: "Default Client",
       notes: "Initial project",
       folders: ["General"],
-      timestamp: "18 minutes ago",
+      created_at: "18 minutes ago",
     },
   ]);
 
-  // Form State
   const [projectName, setProjectName] = useState("");
   const [clientName, setClientName] = useState("");
   const [notes, setNotes] = useState("");
   const [folders, setFolders] = useState<string[]>(["auto-1"]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
-  // --- Handlers ---
-  const handleCreateProject = () => {
-    const newProject: Project = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: projectName,
-      clientName,
-      notes,
-      folders,
-      timestamp: "Just now",
+  const supabase = getSupabaseBrowserClient();
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching projects:", error);
+      } else if (data) {
+        setProjects(data);
+      }
     };
-    setProjects([newProject, ...projects]);
-    resetForm();
-    setCurrentStep("DASHBOARD");
+
+    fetchProjects();
+  }, [supabase]);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const newImageUrls = filesArray.map((file) => URL.createObjectURL(file));
+
+      setImageUrls([...imageUrls, ...newImageUrls]);
+    }
+  };
+
+  const [isPending, startTransition] = useTransition();
+
+  const handleClickUploadImagesButton = () => {
+    startTransition(async () => {
+      let uploadedUrls: string[] = [];
+
+      for (const url of imageUrls) {
+        const imageFile = await convertBlobUrlToFile(url);
+
+        const { imageUrl, error } = await uploadImage({
+          file: imageFile,
+          bucket: "jenga-log",
+        });
+
+        if (error) {
+          console.error(error);
+          alert("Failed to upload image: " + error);
+          return;
+        }
+
+        uploadedUrls.push(imageUrl);
+      }
+
+      const { data, error } = await supabase
+        .from("projects")
+        .insert([
+          {
+            name: projectName,
+            client_name: clientName,
+            notes: notes,
+            folders: folders,
+            image_url: uploadedUrls[0],
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Dtabase error:", error);
+        alert("Project created but failed to save to database.");
+        return;
+      }
+
+      if (data) {
+        setProjects((prev) => [data, ...prev]);
+        setImageUrls([]);
+        resetForm();
+        setCurrentStep("DASHBOARD");
+      }
+    });
   };
 
   const resetForm = () => {
@@ -56,11 +133,16 @@ export default function SiteCamProjectManager() {
     setFolders(["auto-1"]);
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(projects.filter((p) => p.id !== id));
-  };
+  const deleteProject = async (id: string) => {
+    const { error } = await supabase.from("projects").delete().eq("id", id);
 
-  // --- Sub-Components ---
+    if (error) {
+      console.error("Error deleting project:", error);
+      alert("Could not delete project");
+    } else {
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
 
   const ProgressBar = ({ stepIndex }: { stepIndex: number }) => (
     <div className="flex items-center justify-between w-full max-w-3xl mb-12 relative">
@@ -91,7 +173,6 @@ export default function SiteCamProjectManager() {
   return (
     <div className="min-h-screen bg-[#1e1e1e] backdrop-blur-md shadow-lg rounded-xl p-4 md:p-6 border border-[#1f1f1f] mx-2 md:mx-0 font-sans text-gray-800">
       <main className="py-6 px-4 lg:px-8 max-w-7xl mx-auto">
-        {/* DASHBOARD VIEW (spro5.png) */}
         {currentStep === "DASHBOARD" && (
           <div>
             <div className="flex justify-between items-center mb-8">
@@ -126,12 +207,13 @@ export default function SiteCamProjectManager() {
                 <div key={project.id} className="group cursor-pointer">
                   <div className="aspect-[4/3] bg-gray-100 rounded overflow-hidden relative border border-gray-100 mb-2">
                     <img
-                      src="https://images.unsplash.com/photo-1590001158193-79cd7c7d3f76?auto=format&fit=crop&q=80&w=400"
-                      alt="Project"
+                      src={
+                        project.image_url || "https://via.placeholder.com/400"
+                      }
+                      alt={project.name}
                       className="w-full h-full object-cover grayscale opacity-80"
                     />
 
-                    {/* Menu Overlay */}
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="bg-white rounded shadow-md flex flex-col p-1">
                         <button className="p-2 hover:bg-gray-100 rounded text-blue-600">
@@ -150,7 +232,9 @@ export default function SiteCamProjectManager() {
                     {project.name}
                   </h3>
                   <p className="text-[11px] text-gray-100 mt-0.5">
-                    {project.timestamp}
+                    {project.created_at
+                      ? new Date(project.created_at).toLocaleDateString()
+                      : "Just now"}
                   </p>
                 </div>
               ))}
@@ -158,7 +242,6 @@ export default function SiteCamProjectManager() {
           </div>
         )}
 
-        {/* CREATE STEPS (spro, spro2, spro4) */}
         {currentStep !== "DASHBOARD" && (
           <div className="flex flex-col items-center pt-10">
             <h2 className="text-2xl text-gray-100 self-start mb-8">
@@ -178,7 +261,6 @@ export default function SiteCamProjectManager() {
             />
 
             <div className="w-full max-w-xl flex flex-col items-center">
-              {/* Step 1: Name (spro.png) */}
               {currentStep === "PROJECT_NAME" && (
                 <div className="w-full space-y-6">
                   <div className="space-y-2">
@@ -196,13 +278,17 @@ export default function SiteCamProjectManager() {
                 </div>
               )}
 
-              {/* Step 2: Plan (spro2.png) */}
               {currentStep === "PLAN_SETUP" && (
                 <div className="w-full flex flex-col items-center py-10">
                   <p className="mb-6 text-gray-100 font-medium">
                     Select plans to upload
                   </p>
-                  <div className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl p-12 flex flex-col items-center justify-center bg-gray-50/50 transition-colors cursor-pointer">
+                  <div
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
+                    className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl p-12 flex flex-col items-center justify-center bg-gray-50/50 transition-colors cursor-pointer"
+                  >
                     <div className="relative">
                       <div className="w-16 h-16 text-gray-100">
                         <Upload size={64} />
@@ -211,21 +297,36 @@ export default function SiteCamProjectManager() {
                         <Plus size={12} />
                       </div>
                     </div>
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      id="fileInput"
+                      hidden
+                      onChange={handleImageChange}
+                      disabled={isPending}
+                      accept="image/*,application/pdf"
+                    />
+                    <Upload
+                      size={64}
+                      className={
+                        selectedFile ? "text-emerald-400" : "text-gray-100"
+                      }
+                    />
                     <p className="mt-4 text-sm text-gray-100">
-                      Upload file (pdf, jpg, png)
+                      {selectedFile
+                        ? selectedFile.name
+                        : "Upload file (pdf, jpg, png)"}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Details & Folders (spro4.png + customization) */}
               {currentStep === "FOLDERS" && (
                 <div className="w-full space-y-8">
                   <p className="text-center text-gray-100">
                     Complete project details
                   </p>
 
-                  {/* Client Name Spot */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-100 uppercase">
                       Client Name
@@ -238,7 +339,6 @@ export default function SiteCamProjectManager() {
                     />
                   </div>
 
-                  {/* Folders List */}
                   <div className="space-y-4">
                     <label className="text-xs font-bold text-gray-100 uppercase">
                       Folders
@@ -264,7 +364,6 @@ export default function SiteCamProjectManager() {
                     ))}
                   </div>
 
-                  {/* Photo Notes Spot */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-100 uppercase">
                       Project Notes
@@ -286,7 +385,6 @@ export default function SiteCamProjectManager() {
                 </div>
               )}
 
-              {/* Navigation Buttons */}
               <div className="flex gap-4 mt-12 w-full max-w-xs">
                 <button
                   onClick={() =>
@@ -304,7 +402,7 @@ export default function SiteCamProjectManager() {
                       setCurrentStep("PLAN_SETUP");
                     else if (currentStep === "PLAN_SETUP")
                       setCurrentStep("FOLDERS");
-                    else handleCreateProject();
+                    else handleClickUploadImagesButton();
                   }}
                   className="flex-1 py-2 bg-amber-400 rounded-md font-bold text-gray-800 hover:bg-amber-500 transition-colors uppercase tracking-wider text-sm"
                 >
