@@ -35,7 +35,7 @@ export const SidebarItems: SidebarItem[] = [
   },
   {
     name: "Sales",
-    href: "/admin-dashboard/sales",
+    href: "/admin-dashboard/dashboard",
     icon: DollarSign,
   },
   {
