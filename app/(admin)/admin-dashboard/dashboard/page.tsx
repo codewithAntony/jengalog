@@ -7,12 +7,22 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { Plus, MoreVertical, Pencil, Trash2, Upload, X } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Upload,
+  X,
+  ImageIcon,
+  Search,
+} from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import { convertBlobUrlToFile } from "@/lib/utils/convertBlobUrlToFile";
 import { uploadImage } from "@/lib/supabase/storage/client";
+import { toast, Toaster } from "sonner";
+import { Loader2 } from "lucide-react";
 
-type Step = "DASHBOARD" | "PROJECT_NAME" | "PLAN_SETUP" | "FOLDERS" | "DETAILS";
+type Step = "DASHBOARD" | "PROJECT_NAME" | "PLAN_SETUP" | "FOLDERS";
 
 interface Project {
   id: string;
@@ -24,29 +34,21 @@ interface Project {
   created_at: string;
 }
 
-export default function page() {
+export default function ProjectPage() {
   const [currentStep, setCurrentStep] = useState<Step>("DASHBOARD");
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: "1",
-      name: "Example Project",
-      client_name: "Default Client",
-      notes: "Initial project",
-      folders: ["General"],
-      created_at: "18 minutes ago",
-    },
-  ]);
+  const [projects, setProjects] = useState<any[]>([]);
 
   const [projectName, setProjectName] = useState("");
-  const [clientName, setClientName] = useState("");
+  const [clientName, setClientName] = useState("Default Client");
   const [notes, setNotes] = useState("");
-  const [folders, setFolders] = useState<string[]>(["auto-1"]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [folders, setFolders] = useState<string[]>(["General"]);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const supabase = getSupabaseBrowserClient();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -55,112 +57,148 @@ export default function page() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching projects:", error);
-      } else if (data) {
-        setProjects(data);
-      }
+      if (error) console.error("Error fetching projects:", error);
+      else if (data) setProjects(data);
     };
-
     fetchProjects();
   }, [supabase]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      const newImageUrls = filesArray.map((file) => URL.createObjectURL(file));
-
-      setImageUrls([...imageUrls, ...newImageUrls]);
+      const newUrls = filesArray.map((file) => URL.createObjectURL(file));
+      setImageUrls((prev) => [...prev, ...newUrls]);
     }
   };
 
-  const [isPending, startTransition] = useTransition();
+  const filteredProjects = projects.filter((project) =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleClickUploadImagesButton = () => {
-    startTransition(async () => {
-      let uploadedUrls: string[] = [];
+  const handleDeleteClick = async (id: string) => {
+    toast("Are you sure?", {
+      description: "This will permanently delete the project.",
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          const deleteAction = async () => {
+            const { error } = await supabase
+              .from("projects")
+              .delete()
+              .eq("id", id);
+            if (error) throw error;
+          };
 
-      for (const url of imageUrls) {
-        const imageFile = await convertBlobUrlToFile(url);
-
-        const { imageUrl, error } = await uploadImage({
-          file: imageFile,
-          bucket: "jenga-log",
-        });
-
-        if (error) {
-          console.error(error);
-          alert("Failed to upload image: " + error);
-          return;
-        }
-
-        uploadedUrls.push(imageUrl);
-      }
-
-      const { data, error } = await supabase
-        .from("projects")
-        .insert([
-          {
-            name: projectName,
-            client_name: clientName,
-            notes: notes,
-            folders: folders,
-            image_url: uploadedUrls[0],
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Dtabase error:", error);
-        alert("Project created but failed to save to database.");
-        return;
-      }
-
-      if (data) {
-        setProjects((prev) => [data, ...prev]);
-        setImageUrls([]);
-        resetForm();
-        setCurrentStep("DASHBOARD");
-      }
+          toast.promise(deleteAction(), {
+            loading: "Deleting project...",
+            success: () => {
+              setProjects((prev) => prev.filter((p) => p.id !== id));
+              return "Project deleted successfully";
+            },
+            error: "Could not delete project",
+          });
+        },
+      },
     });
+  };
+
+  const handleEditClick = (project: any) => {
+    setEditingProjectId(project.id);
+    setProjectName(project.name);
+    setNotes(project.notes);
+    setImageUrls(project.image_url ? [project.image_url] : []);
+    setCurrentStep("PROJECT_NAME");
+  };
+
+  const removePreviewImage = (index: number) => {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const resetForm = () => {
     setProjectName("");
-    setClientName("");
+    setClientName("Default Client");
     setNotes("");
-    setFolders(["auto-1"]);
+    setFolders(["General"]);
+    setImageUrls([]);
+    setCurrentStep("DASHBOARD");
   };
 
-  const deleteProject = async (id: string) => {
-    const { error } = await supabase.from("projects").delete().eq("id", id);
+  const handleClickUploadImagesButton = () => {
+    startTransition(async () => {
+      const loadingToast = toast.loading(
+        editingProjectId ? "Updating project..." : "Creating project..."
+      );
 
-    if (error) {
-      console.error("Error deleting project:", error);
-      alert("Could not delete project");
-    } else {
-      setProjects((prev) => prev.filter((p) => p.id !== id));
-    }
+      try {
+        let finalImageUrl = imageUrls[0];
+
+        if (imageUrls[0]?.startsWith("blob:")) {
+          const imageFile = await convertBlobUrlToFile(imageUrls[0]);
+          const { imageUrl, error } = await uploadImage({
+            file: imageFile,
+            bucket: "jenga-log",
+          });
+          if (error) throw new Error(error);
+          finalImageUrl = imageUrl;
+        }
+
+        const projectData = {
+          name: projectName,
+          notes: notes,
+          image_url: finalImageUrl,
+          client_name: clientName,
+          folders: folders,
+        };
+
+        const { data, error } = editingProjectId
+          ? await supabase
+              .from("projects")
+              .update(projectData)
+              .eq("id", editingProjectId)
+              .select()
+              .single()
+          : await supabase
+              .from("projects")
+              .insert([projectData])
+              .select()
+              .single();
+
+        if (error) throw error;
+
+        setProjects((prev) =>
+          editingProjectId
+            ? prev.map((p) => (p.id === data.id ? data : p))
+            : [data, ...prev]
+        );
+
+        toast.success(
+          editingProjectId ? "Project updated!" : "Project created!",
+          { id: loadingToast }
+        );
+        resetForm();
+      } catch (error: any) {
+        toast.error(error.message || "An error occurred", { id: loadingToast });
+      }
+    });
   };
 
   const ProgressBar = ({ stepIndex }: { stepIndex: number }) => (
     <div className="flex items-center justify-between w-full max-w-3xl mb-12 relative">
-      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10" />
+      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -z-10" />
       <div
-        className={`absolute top-1/2 left-0 h-0.5 bg-emerald-400 transition-all duration-300 -z-10`}
-        style={{ width: `${(stepIndex / 3) * 100}%` }}
+        className="absolute top-1/2 left-0 h-0.5 bg-amber-400 transition-all duration-300 -z-10"
+        style={{ width: `${(stepIndex / 2) * 100}%` }}
       />
-      {["Project Name", "Plan Setup", "Create Folders"].map((label, i) => (
+      {["Project Name", "Upload Plans", "Finalize"].map((label, i) => (
         <div key={label} className="flex flex-col items-center">
           <div
-            className={`w-3 h-3 rounded-full ${
-              i <= stepIndex ? "bg-emerald-400" : "bg-gray-300"
+            className={`w-4 h-4 rounded-full ${
+              i <= stepIndex ? "bg-amber-400" : "bg-gray-600"
             }`}
           />
           <span
             className={`text-[12px] mt-2 font-medium ${
-              i <= stepIndex ? "text-gray-100" : "text-gray-400"
+              i <= stepIndex ? "text-amber-400" : "text-gray-500"
             }`}
           >
             {label}
@@ -171,83 +209,101 @@ export default function page() {
   );
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] backdrop-blur-md shadow-lg rounded-xl p-4 md:p-6 border border-[#1f1f1f] mx-2 md:mx-0 font-sans text-gray-800">
-      <main className="py-6 px-4 lg:px-8 max-w-7xl mx-auto">
-        {currentStep === "DASHBOARD" && (
+    <div className="min-h-screen bg-[#121212] text-gray-100 p-4 md:p-8">
+      <main className="max-w-6xl mx-auto">
+        {currentStep === "DASHBOARD" ? (
           <div>
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-100">Sort by</span>
-                <select className="border-none text-gray-100 text-sm font-medium focus:ring-0">
-                  <option>Date</option>
-                </select>
-              </div>
-              <div className="flex gap-4">
-                <div className="relative">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+              <h1 className="text-2xl font-bold">Projects</h1>
+              <div className="flex w-full md:w-auto gap-3">
+                <div className="relative flex-1 md:w-64">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    size={18}
+                  />
                   <input
                     type="text"
-                    placeholder="Search"
-                    className="pl-10 pr-4 py-2 border border-gray-200 text-gray-100 rounded-full text-sm w-64 focus:outline-none focus:border-amber-400"
+                    placeholder="Search projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#1e1e1e] border border-gray-800 rounded-lg py-2.5 pl-10 pr-4 focus:border-amber-400 outline-none transition-all text-sm"
                   />
-                  <span className="absolute left-3 top-2.5 text-gray-400">
-                    🔍
-                  </span>
                 </div>
-                <button
-                  onClick={() => setCurrentStep("PROJECT_NAME")}
-                  className="bg-amber-400 hover:bg-amber-500 font-bold py-2 px-4 rounded flex items-center gap-2 text-sm"
-                >
-                  <Plus size={18} /> NEW PROJECT
-                </button>
               </div>
+              <button
+                onClick={() => setCurrentStep("PROJECT_NAME")}
+                className="bg-amber-400 hover:bg-amber-500 text-black font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-transform active:scale-95"
+              >
+                <Plus size={20} /> NEW PROJECT
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {projects.map((project) => (
-                <div key={project.id} className="group cursor-pointer">
-                  <div className="aspect-[4/3] bg-gray-100 rounded overflow-hidden relative border border-gray-100 mb-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {filteredProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="group relative bg-[#1e1e1e] rounded-xl overflow-hidden border border-gray-800"
+                >
+                  <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(project);
+                      }}
+                      className="p-2 bg-blue-500 hover:bg-amber-400 hover:text-black rounded-full backdrop-blur-md transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(project.id);
+                      }}
+                      className="p-2 bg-blue-500 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <div className="aspect-square bg-gray-800">
                     <img
                       src={
                         project.image_url || "https://via.placeholder.com/400"
                       }
                       alt={project.name}
-                      className="w-full h-full object-cover grayscale opacity-80"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
-
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="bg-white rounded shadow-md flex flex-col p-1">
-                        <button className="p-2 hover:bg-gray-100 rounded text-blue-600">
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => deleteProject(project.id)}
-                          className="p-2 hover:bg-gray-100 rounded text-red-600"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                  <h3 className="font-medium text-sm text-gray-100">
-                    {project.name}
-                  </h3>
-                  <p className="text-[11px] text-gray-100 mt-0.5">
-                    {project.created_at
-                      ? new Date(project.created_at).toLocaleDateString()
-                      : "Just now"}
-                  </p>
+                  <div className="p-3 border-t border-gray-800/50">
+                    <h3 className="font-semibold text-sm truncate text-gray-200">
+                      {project.name}
+                    </h3>
+                    <p className="text-[10px] uppercase tracking-wider mt-1 text-gray-500">
+                      {new Date(project.created_at).toLocaleDateString(
+                        undefined,
+                        { dateStyle: "medium" }
+                      )}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
+            {/* Empty state */}
+            {filteredProjects.length === 0 && (
+              <div className="text-center py-20 bg-[#1e1e1e] rounded-2xl border border-dashed border-gray-800">
+                <p className="text-gray-500">
+                  No projects found matching "{searchQuery}"
+                </p>
+              </div>
+            )}
           </div>
-        )}
-
-        {currentStep !== "DASHBOARD" && (
-          <div className="flex flex-col items-center pt-10">
-            <h2 className="text-2xl text-gray-100 self-start mb-8">
+        ) : (
+          <div className="flex flex-col items-center pt-4">
+            <h2 className="text-3xl font-bold mb-8 self-start text-gray-300">
               {currentStep === "PROJECT_NAME"
-                ? "Create a new Project"
-                : `New Project: ${projectName}`}
+                ? "Start New Project"
+                : projectName}
             </h2>
 
             <ProgressBar
@@ -260,153 +316,172 @@ export default function page() {
               }
             />
 
-            <div className="w-full max-w-xl flex flex-col items-center">
+            <div className="w-full max-w-2xl bg-[#1e1e1e] p-8 rounded-2xl border border-gray-800 shadow-2xl">
               {currentStep === "PROJECT_NAME" && (
-                <div className="w-full space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-100">
-                      Enter Project Name
-                    </label>
-                    <input
-                      autoFocus
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                      placeholder="Give your project a name (e.g. 8 Pilot St)"
-                      className="w-full border-b-2 text-gray-100 py-2 focus:outline-none text-lg"
-                    />
-                  </div>
+                <div className="space-y-4">
+                  <label className="block text-lg font-medium text-gray-300">
+                    Project Name
+                  </label>
+                  <input
+                    autoFocus
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="e.g. Riverside Apartment"
+                    className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-amber-400 outline-none transition-all"
+                  />
                 </div>
               )}
 
               {currentStep === "PLAN_SETUP" && (
-                <div className="w-full flex flex-col items-center py-10">
-                  <p className="mb-6 text-gray-100 font-medium">
-                    Select plans to upload
-                  </p>
+                <div className="text-center">
                   <div
-                    onClick={() =>
-                      document.getElementById("fileInput")?.click()
-                    }
-                    className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl p-12 flex flex-col items-center justify-center bg-gray-50/50 transition-colors cursor-pointer"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-700 rounded-2xl p-12 hover:border-amber-400 hover:bg-amber-400/5 cursor-pointer transition-all"
                   >
-                    <div className="relative">
-                      <div className="w-16 h-16 text-gray-100">
-                        <Upload size={64} />
-                      </div>
-                      <div className="absolute -top-1 -right-1 bg-blue-500 rounded-full p-1 text-white border-4 border-white">
-                        <Plus size={12} />
-                      </div>
-                    </div>
+                    <Upload size={48} className="mx-auto mb-4 text-gray-500" />
+                    <p className="text-lg font-medium">
+                      Click to upload images
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      You can select multiple files
+                    </p>
                     <input
                       type="file"
                       ref={imageInputRef}
-                      id="fileInput"
+                      multiple
                       hidden
                       onChange={handleImageChange}
-                      disabled={isPending}
-                      accept="image/*,application/pdf"
+                      accept="image/*"
                     />
-                    <Upload
-                      size={64}
-                      className={
-                        selectedFile ? "text-emerald-400" : "text-gray-100"
-                      }
-                    />
-                    <p className="mt-4 text-sm text-gray-100">
-                      {selectedFile
-                        ? selectedFile.name
-                        : "Upload file (pdf, jpg, png)"}
-                    </p>
                   </div>
+
+                  {imageUrls.length > 0 && (
+                    <div className="mt-6 grid grid-cols-4 gap-2">
+                      {imageUrls.map((url, i) => (
+                        <div
+                          key={i}
+                          className="relative aspect-square rounded-lg overflow-hidden border border-gray-700"
+                        >
+                          <img
+                            src={url}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePreviewImage(i);
+                            }}
+                            className="absolute top-1 right-1 bg-red-500 rounded-full p-1"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {currentStep === "FOLDERS" && (
-                <div className="w-full space-y-8">
-                  <p className="text-center text-gray-100">
-                    Complete project details
-                  </p>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-100 uppercase">
-                      Client Name
+                <div className="space-y-8">
+                  <section>
+                    <label className="text-xs font-bold uppercase text-gray-500 tracking-widest flex items-center gap-2 mb-4">
+                      <ImageIcon size={14} /> Project Gallery (
+                      {imageUrls.length} images)
                     </label>
-                    <input
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      placeholder="e.g. Acme Corp"
-                      className="w-full border-b border-gray-200 text-gray-100 py-2 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="text-xs font-bold text-gray-100 uppercase">
-                      Folders
-                    </label>
-                    {folders.map((folder, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded text-blue-600">
-                          📁
-                        </div>
-                        <input
-                          value={folder}
-                          onChange={(e) => {
-                            const newFolders = [...folders];
-                            newFolders[idx] = e.target.value;
-                            setFolders(newFolders);
-                          }}
-                          className="flex-1 border-b text-gray-500 py-1 focus:outline-none"
+                    <div className="bg-black/20 p-4 rounded-xl grid grid-cols-3 gap-3 max-h-60 overflow-y-auto border border-gray-800">
+                      {imageUrls.map((url, i) => (
+                        <img
+                          key={i}
+                          src={url}
+                          className="w-full aspect-video object-cover rounded-lg"
                         />
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreVertical size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </section>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-100 uppercase">
+                  <section className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-gray-500 tracking-widest">
                       Project Notes
                     </label>
                     <textarea
-                      rows={3}
+                      rows={4}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Add specific instructions for photo captures..."
-                      className="w-full border border-gray-200 text-gray-100 rounded-lg p-3 text-sm focus:ring-1 focus:outline-none"
+                      placeholder="Add specific instructions or descriptions..."
+                      className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-sm focus:ring-1 focus:ring-amber-400 outline-none"
                     />
-                    <button
-                      onClick={() => setFolders([...folders, ""])}
-                      className="text-blue-500 text-sm font-medium flex items-center gap-1 hover:underline"
-                    >
-                      <Plus size={16} /> Add Folder
-                    </button>
-                  </div>
+                  </section>
                 </div>
               )}
 
-              <div className="flex gap-4 mt-12 w-full max-w-xs">
+              {/* <div className="flex gap-4 mt-10">
                 <button
-                  onClick={() =>
-                    currentStep === "PROJECT_NAME"
-                      ? setCurrentStep("DASHBOARD")
-                      : setCurrentStep("PROJECT_NAME")
-                  }
-                  className="flex-1 py-2 border border-gray-300 rounded-md font-bold text-gray-100 hover:bg-gray-500 transition-colors uppercase tracking-wider text-sm"
+                  onClick={resetForm}
+                  className="flex-1 py-4  mt-4 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition-colors uppercase tracking-widest text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => {
-                    if (currentStep === "PROJECT_NAME")
+                    if (currentStep === "PROJECT_NAME") {
+                      if (!projectName.trim()) return;
                       setCurrentStep("PLAN_SETUP");
-                    else if (currentStep === "PLAN_SETUP")
+                    } else if (currentStep === "PLAN_SETUP") {
+                      if (imageUrls.length === 0)
+                        return alert("Upload at least one image");
                       setCurrentStep("FOLDERS");
-                    else handleClickUploadImagesButton();
+                    } else {
+                      handleClickUploadImagesButton();
+                    }
                   }}
-                  className="flex-1 py-2 bg-amber-400 rounded-md font-bold text-gray-800 hover:bg-amber-500 transition-colors uppercase tracking-wider text-sm"
+                  disabled={isPending}
+                  className="flex-1 py-4 mt-4 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition"
                 >
-                  {currentStep === "FOLDERS" ? "Finish" : "Next"}
+                  {isPending
+                    ? "Processing..."
+                    : currentStep === "FOLDERS"
+                    ? "Complete Project"
+                    : "Next Step"}
+                </button>
+              </div> */}
+              <div className="flex gap-4 mt-10">
+                <button
+                  onClick={() => {
+                    if (currentStep === "PROJECT_NAME") {
+                      resetForm();
+                    } else if (currentStep === "PLAN_SETUP") {
+                      setCurrentStep("PROJECT_NAME");
+                    } else if (currentStep === "FOLDERS") {
+                      setCurrentStep("PLAN_SETUP");
+                    }
+                  }}
+                  className="flex-1 py-4 mt-4 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition-colors uppercase tracking-widest text-sm"
+                >
+                  {currentStep === "PROJECT_NAME" ? "Cancel" : "Back"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (currentStep === "PROJECT_NAME") {
+                      if (!projectName.trim()) return;
+                      setCurrentStep("PLAN_SETUP");
+                    } else if (currentStep === "PLAN_SETUP") {
+                      if (imageUrls.length === 0)
+                        return alert("Upload at least one image");
+                      setCurrentStep("FOLDERS");
+                    } else {
+                      handleClickUploadImagesButton();
+                    }
+                  }}
+                  disabled={isPending}
+                  className="flex-1 py-4 mt-4 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition-colors uppercase tracking-widest text-sm disabled:opacity-50"
+                >
+                  {isPending
+                    ? "Processing..."
+                    : currentStep == "FOLDERS"
+                    ? "Complete Project"
+                    : "Next Step"}
                 </button>
               </div>
             </div>
