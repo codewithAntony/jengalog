@@ -1,15 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ke from "../../../public/images/ke.png";
 import manager from "../../../public/images/manager.png";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { User } from "@supabase/supabase-js";
 
 const AdminHeader = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = getSupabaseBrowserClient();
   const router = useRouter();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase]);
+
+  const displayName =
+    user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Admin";
 
   return (
     <header className="bg-[#1e1e1e] shadow-lg border-b border-[#1f1f1f] mx-4 sm:mx-6 lg:mx-8 mt-4 mb-2 rounded-lg">
@@ -32,21 +48,20 @@ const AdminHeader = () => {
 
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Image
-              src={manager}
+              src={user?.user_metadata?.avatar_url || manager}
               alt="admin"
               width={35}
               height={35}
               className="rounded-full bg-white border border-gray-600"
             />
 
-            <span className="hidden sm:block text-gray-100 font-medium">
-              Ken Wa Maria
+            <span className="hidden sm:block text-gray-100 font-medium capitalize">
+              {displayName}
             </span>
 
             <button
-              className="uppercase font-semibold text-[#2E2E2E] px-6 py-2 border-black border-2 rounded-lg hover:bg-[#EBEBEB]"
+              className="uppercase font-semibold bg-amber-400 hover:bg-amber-500 text-black px-6 py-2 border-black border-2 rounded-lg"
               onClick={async () => {
-                const supabase = getSupabaseBrowserClient();
                 await supabase.auth.signOut();
                 window.location.href = "/auth";
               }}
