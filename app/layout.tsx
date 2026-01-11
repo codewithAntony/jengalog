@@ -4,6 +4,7 @@ import "./globals.css";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import Navbar from "./components/Navbar";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster position="top-center" richColors />
         <Navbar session={session} />
         <main className="">{children}</main>
       </body>
