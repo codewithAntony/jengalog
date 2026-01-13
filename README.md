@@ -1,1 +1,1 @@
-an engineering website
+An engineering website, that is used by kenyan engineers
