@@ -42,9 +42,9 @@ const AdminHeader = () => {
             className="rounded-full shadow-md cursor-pointer"
           />
 
-          <div className="relative">
+          {/* <div className="relative">
             <Bell className="w-5 sm:w-6 h-5 sm:h-6 text-gray-300 cursor-pointer hover:text-white" />
-          </div>
+          </div> */}
 
           <div className="flex items-center space-x-2 sm:space-x-3">
             <Image
