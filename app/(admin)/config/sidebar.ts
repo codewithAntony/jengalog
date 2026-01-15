@@ -24,43 +24,44 @@ export const SidebarItems: SidebarItem[] = [
     icon: House,
   },
   {
-    name: "Products",
-    href: "/admin-dashboard/products",
-    icon: ShoppingBag,
-  },
-  {
-    name: "Clients",
-    href: "/admin-dashboard/user",
-    icon: Users,
-  },
-  {
-    name: "Sales",
-    href: "/admin-dashboard/overview",
-    icon: DollarSign,
-  },
-  {
-    name: "Orders",
-    href: "/admin-dashboard/orders",
-    icon: ShoppingCart,
-  },
-  {
-    name: "Messages",
+    name: "Add Employees",
     href: "/admin-dashboard/add-employees",
     icon: Mail,
   },
   {
-    name: "Notifications",
+    name: "Employees",
     href: "/admin-dashboard/employees",
     icon: Bell,
   },
-  {
-    name: "Settings",
-    href: "/admin-dashboard/settings",
-    icon: Settings,
-  },
-  {
-    name: "Help",
-    href: "/admin-dashboard/help",
-    icon: Info,
-  },
+  // {
+  //   name: "Products",
+  //   href: "/admin-dashboard/products",
+  //   icon: ShoppingBag,
+  // },
+  // {
+  //   name: "Clients",
+  //   href: "/admin-dashboard/user",
+  //   icon: Users,
+  // },
+  // {
+  //   name: "Sales",
+  //   href: "/admin-dashboard/overview",
+  //   icon: DollarSign,
+  // },
+  // {
+  //   name: "Orders",
+  //   href: "/admin-dashboard/orders",
+  //   icon: ShoppingCart,
+  // },
+
+  // {
+  //   name: "Settings",
+  //   href: "/admin-dashboard/settings",
+  //   icon: Settings,
+  // },
+  // {
+  //   name: "Help",
+  //   href: "/admin-dashboard/help",
+  //   icon: Info,
+  // },
 ];

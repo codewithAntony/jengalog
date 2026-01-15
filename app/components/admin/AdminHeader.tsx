@@ -60,7 +60,7 @@ const AdminHeader = () => {
             </span>
 
             <button
-              className="uppercase font-semibold bg-amber-400 hover:bg-amber-500 text-black px-6 py-2 border-black border-2 rounded-lg"
+              className="uppercase font-semibold bg-emerald-500 hover:bg-emerald-500 text-black px-6 py-2 border-black border-2 rounded-lg"
               onClick={async () => {
                 await supabase.auth.signOut();
                 window.location.href = "/auth";

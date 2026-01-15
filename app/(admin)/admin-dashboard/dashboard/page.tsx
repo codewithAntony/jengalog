@@ -207,19 +207,19 @@ export default function ProjectPage() {
     <div className="flex items-center justify-between w-full max-w-3xl mb-12 relative">
       <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-700 -z-10" />
       <div
-        className="absolute top-1/2 left-0 h-0.5 bg-amber-400 transition-all duration-300 -z-10"
+        className="absolute top-1/2 left-0 h-0.5 bg-emerald-500 transition-all duration-300 -z-10"
         style={{ width: `${(stepIndex / 2) * 100}%` }}
       />
       {["Project Name", "Upload Plans", "Finalize"].map((label, i) => (
         <div key={label} className="flex flex-col items-center">
           <div
             className={`w-4 h-4 rounded-full ${
-              i <= stepIndex ? "bg-amber-400" : "bg-gray-600"
+              i <= stepIndex ? "bg-emerald-500" : "bg-gray-600"
             }`}
           />
           <span
             className={`text-[12px] mt-2 font-medium ${
-              i <= stepIndex ? "text-amber-400" : "text-gray-500"
+              i <= stepIndex ? "text-emerald-500" : "text-gray-500"
             }`}
           >
             {label}
@@ -247,13 +247,13 @@ export default function ProjectPage() {
                     placeholder="Search projects..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[#1e1e1e] border border-gray-800 rounded-lg py-2.5 pl-10 pr-4 focus:border-amber-400 outline-none transition-all text-sm"
+                    className="w-full bg-[#1e1e1e] border border-gray-800 rounded-lg py-2.5 pl-10 pr-4 focus:border-emerald-500 outline-none transition-all text-sm"
                   />
                 </div>
               </div>
               <button
                 onClick={() => setCurrentStep("PROJECT_NAME")}
-                className="bg-amber-400 hover:bg-amber-500 text-black font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-transform active:scale-95"
+                className="bg-emerald-500 hover:bg-emerald-500 text-black font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-transform active:scale-95"
               >
                 <Plus size={20} /> NEW PROJECT
               </button>
@@ -272,7 +272,7 @@ export default function ProjectPage() {
                         e.stopPropagation();
                         handleEditClick(project);
                       }}
-                      className="p-2 bg-blue-500 hover:bg-amber-400 hover:text-black rounded-full transition-colors"
+                      className="p-2 bg-blue-500 hover:bg-emerald-500 hover:text-black rounded-full transition-colors"
                     >
                       <Pencil size={14} />
                     </button>
@@ -314,7 +314,7 @@ export default function ProjectPage() {
           <div className="max-w-5xl mx-auto">
             <button
               onClick={() => setCurrentStep("DASHBOARD")}
-              className="text-amber-400 mb-6 flex items-center gap-2 hover:underline"
+              className="text-emerald-500 mb-6 flex items-center gap-2 hover:underline"
             >
               ← Back to Dashboard
             </button>
@@ -367,7 +367,7 @@ export default function ProjectPage() {
                               `${selectedProject.name}-${index}.jpg`
                             )
                           }
-                          className="bg-amber-400 text-black p-2 rounded-full hover:bg-amber-500 transition-colors"
+                          className="bg-emerald-500 text-black p-2 rounded-full hover:bg-emerald-500 transition-colors"
                         >
                           <Upload size={20} className="rotate-180" />
                         </button>
@@ -403,7 +403,7 @@ export default function ProjectPage() {
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     placeholder="e.g. Riverside Apartment"
-                    className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-amber-400 outline-none transition-all"
+                    className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-emerald-500 outline-none transition-all"
                   />
                 </div>
               )}
@@ -411,7 +411,7 @@ export default function ProjectPage() {
                 <div className="text-center">
                   <div
                     onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-700 rounded-2xl p-12 hover:border-amber-400 hover:bg-amber-400/5 cursor-pointer transition-all"
+                    className="border-2 border-dashed border-gray-700 rounded-2xl p-12 hover:border-emerald-500 hover:bg-emerald-500/5 cursor-pointer transition-all"
                   >
                     <Upload size={48} className="mx-auto mb-4 text-gray-500" />
                     <p className="text-lg font-medium">
@@ -480,7 +480,7 @@ export default function ProjectPage() {
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Add specific instructions..."
-                      className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-sm focus:ring-1 focus:ring-amber-400 outline-none"
+                      className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
                     />
                   </section>
                 </div>
@@ -510,7 +510,7 @@ export default function ProjectPage() {
                     } else handleClickUploadImagesButton();
                   }}
                   disabled={isPending}
-                  className="flex-1 py-4 bg-amber-400 text-black rounded-xl font-bold hover:bg-amber-500 transition-colors uppercase tracking-widest text-sm disabled:opacity-50"
+                  className="flex-1 py-4 bg-emerald-500 text-black rounded-xl font-bold hover:bg-emerald-500 transition-colors uppercase tracking-widest text-sm disabled:opacity-50"
                 >
                   {isPending
                     ? "Processing..."

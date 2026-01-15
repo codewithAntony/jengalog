@@ -44,6 +44,7 @@ export default function page() {
   }, []);
 
   const handleDelete = async (id: string) => {
+    console.log("Deleting ID:", id);
     toast.warning("Are you sure?", {
       description: "This action cannot be undone.",
       action: {
@@ -54,7 +55,8 @@ export default function page() {
             .delete()
             .eq("id", id);
           if (error) {
-            toast.error("Error deleting employee");
+            console.error("Supabase Delete Error:", error);
+            toast.error(error.message);
           } else {
             setEmployees((prev) => prev.filter((emp) => emp.id !== id));
             toast.success("Employee removed successfully");
