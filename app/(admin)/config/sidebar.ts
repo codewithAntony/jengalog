@@ -20,7 +20,7 @@ export interface SidebarItem {
 export const SidebarItems: SidebarItem[] = [
   {
     name: "Dashboard",
-    href: "/admin-dashboard/overview",
+    href: "/admin-dashboard/dashboard",
     icon: House,
   },
   {
@@ -35,7 +35,7 @@ export const SidebarItems: SidebarItem[] = [
   },
   {
     name: "Sales",
-    href: "/admin-dashboard/dashboard",
+    href: "/admin-dashboard/overview",
     icon: DollarSign,
   },
   {
@@ -45,12 +45,12 @@ export const SidebarItems: SidebarItem[] = [
   },
   {
     name: "Messages",
-    href: "/admin-dashboard/messages",
+    href: "/admin-dashboard/add-employees",
     icon: Mail,
   },
   {
     name: "Notifications",
-    href: "/admin-dashboard/notifications",
+    href: "/admin-dashboard/employees",
     icon: Bell,
   },
   {
