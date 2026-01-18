@@ -33,11 +33,11 @@ export const SidebarItems: SidebarItem[] = [
     href: "/admin-dashboard/employees",
     icon: Bell,
   },
-  // {
-  //   name: "Products",
-  //   href: "/admin-dashboard/products",
-  //   icon: ShoppingBag,
-  // },
+  {
+    name: "Updates",
+    href: "/admin-dashboard/post-update",
+    icon: ShoppingBag,
+  },
   // {
   //   name: "Clients",
   //   href: "/admin-dashboard/user",

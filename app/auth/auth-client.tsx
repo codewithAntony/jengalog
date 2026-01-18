@@ -41,7 +41,7 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/admin-dashboard/overview`,
+          emailRedirectTo: `${window.location.origin}/admin-dashboard/dashboard`,
         },
       });
       if (error) {
@@ -154,8 +154,8 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
             {isLoading
               ? "Processing..."
               : mode === "signup"
-              ? "Create Account"
-              : "Sign In"}
+                ? "Create Account"
+                : "Sign In"}
           </button>
 
           {status && (

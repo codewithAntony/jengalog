@@ -19,12 +19,12 @@ export async function GET(request: Request) {
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
+                cookieStore.set(name, value, options),
               );
             } catch (error) {}
           },
         },
-      }
+      },
     );
 
     const {
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       const role = profile?.role || "client";
 
       const redirectPath =
-        role === "admin" ? "/admin-dashboard/overview" : "/dashboard";
+        role === "admin" ? "/admin-dashboard/dashboard" : "/dashboard";
 
       return NextResponse.redirect(new URL(redirectPath, origin));
     }

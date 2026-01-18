@@ -17,16 +17,19 @@ export async function uploadSiteUpdate(formData: FormData) {
 
   const { data: storageData, error: storageError } = await supabase.storage
     .from("project-updates")
-    .upload(filePath, imageFile);
+    .upload(filePath, imageFile, {
+      cacheControl: "3600",
+      upsert: false,
+    });
   if (storageError) {
     console.error("Storage Error:", storageError);
-    throw new Error("Failed to upload image");
+    throw new Error(`Storage error: ${storageError.message}`);
   }
   const { data: urlData } = supabase.storage
     .from("project-updates")
     .getPublicUrl(filePath);
 
-  const { error: dbError } = await supabase.from("site-updates").insert([
+  const { error: dbError } = await supabase.from("site_updates").insert([
     {
       project_id: projectId,
       title: title,

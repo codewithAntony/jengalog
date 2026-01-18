@@ -16,15 +16,15 @@ export async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
   const path = request.nextUrl.pathname;
@@ -48,13 +48,13 @@ export async function proxy(request: NextRequest) {
 
     if (path === "/dashboard" && role === "admin") {
       return NextResponse.redirect(
-        new URL("/admin-dashboard/overview", request.url)
+        new URL("/admin-dashboard/dashboard", request.url),
       );
     }
 
     if (path.startsWith("/auth")) {
       const dest =
-        role === "admin" ? "/admin-dashboard/overview" : "/dashboard";
+        role === "admin" ? "/admin-dashboard/dashboard" : "/dashboard";
       return NextResponse.redirect(new URL(dest, request.url));
     }
   } else {
