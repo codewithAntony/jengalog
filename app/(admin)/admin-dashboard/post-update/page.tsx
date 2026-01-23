@@ -10,11 +10,10 @@ export default async function AdminPostUpdatePage() {
       `
     id,
     name,
-    location,
-    client_id,
     profiles!projects_client_id_fkey (
       first_name,
-      last_name
+      last_name,
+      email
     )
   `,
     )
@@ -25,7 +24,7 @@ export default async function AdminPostUpdatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-[#121212] py-12">
       <AdminForm projects={projects || []} />
     </div>
   );

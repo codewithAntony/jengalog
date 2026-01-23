@@ -1,67 +1,8 @@
-import {
-  Bell,
-  DollarSign,
-  House,
-  Info,
-  Mail,
-  Settings,
-  ShoppingBag,
-  ShoppingCart,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { LayoutDashboard, Camera, CreditCard, HelpCircle } from "lucide-react";
 
-export interface SidebarItem {
-  name: string;
-  href: string;
-  icon: LucideIcon;
-}
-
-export const SidebarItems: SidebarItem[] = [
-  {
-    name: "Dashboard",
-    href: "/admin-dashboard/dashboard",
-    icon: House,
-  },
-  {
-    name: "Add Employees",
-    href: "/admin-dashboard/add-employees",
-    icon: Mail,
-  },
-  {
-    name: "Employees",
-    href: "/admin-dashboard/employees",
-    icon: Bell,
-  },
-  // {
-  //   name: "Products",
-  //   href: "/admin-dashboard/products",
-  //   icon: ShoppingBag,
-  // },
-  // {
-  //   name: "Clients",
-  //   href: "/admin-dashboard/user",
-  //   icon: Users,
-  // },
-  // {
-  //   name: "Sales",
-  //   href: "/admin-dashboard/overview",
-  //   icon: DollarSign,
-  // },
-  // {
-  //   name: "Orders",
-  //   href: "/admin-dashboard/orders",
-  //   icon: ShoppingCart,
-  // },
-
-  // {
-  //   name: "Settings",
-  //   href: "/admin-dashboard/settings",
-  //   icon: Settings,
-  // },
-  // {
-  //   name: "Help",
-  //   href: "/admin-dashboard/help",
-  //   icon: Info,
-  // },
+export const ClientSidebarItems = [
+  { name: "My Progress", href: "/dashboard/projects", icon: LayoutDashboard },
+  { name: "Site Photos", href: "/dashboard/photos", icon: Camera },
+  { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
+  { name: "Support", href: "/dashboard/support", icon: HelpCircle },
 ];

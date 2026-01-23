@@ -98,7 +98,7 @@ export default function page() {
     });
   };
   return (
-    <div className="flex min-h-screen bg-[#05130d]">
+    <div className="flex min-h-screen bg-[#121212]">
       <div className="flex-1 px-4 sm:px-8 py-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
