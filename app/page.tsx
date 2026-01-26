@@ -1,9 +1,9 @@
-import Navbar from "./components/Navbar";
+import ClientNavbar from "./components/client/ClientNavbar";
 
 export default function Home() {
   return (
     <div>
-      <Navbar />
+      <ClientNavbar />
     </div>
   );
 }
