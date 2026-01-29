@@ -208,7 +208,6 @@ export default function ProjectPage() {
     });
   };
 
-  // ... (ProgressBar and downloadImage functions remain the same)
   const downloadImage = async (url: string, fileName: string) => {
     try {
       const response = await fetch(url);
