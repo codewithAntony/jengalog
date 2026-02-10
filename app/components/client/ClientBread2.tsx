@@ -61,9 +61,7 @@ const FeaturesSection = () => {
       ref={containerRef}
       className="relative bg-[#05130D] py-24 overflow-hidden"
     >
-      {/* Outer Layout Lines (Left and Right only) */}
       <div className="absolute inset-0 mx-auto max-w-7xl grid grid-cols-[1fr_10fr_1fr] pointer-events-none">
-        {/* Left Border + Scroll Pip */}
         <div className="border-r border-white/10 relative">
           <motion.div
             style={{ y: smoothY }}
@@ -71,10 +69,8 @@ const FeaturesSection = () => {
           />
         </div>
 
-        {/* Center Space for Content */}
         <div className="bg-transparent" />
 
-        {/* Right Border + Scroll Pip */}
         <div className="border-l border-white/10 relative">
           <motion.div
             style={{ y: smoothY }}
@@ -83,7 +79,6 @@ const FeaturesSection = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="relative z-10 max-w-5xl mx-auto px-6">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-100 mb-4">
@@ -95,7 +90,6 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        {/* The Feature Grid (Removed inner layout lines) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
             <div
