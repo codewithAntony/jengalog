@@ -12,9 +12,15 @@ export async function uploadSiteUpdate(formData: FormData) {
 
     const supabase = await createSupabaseServerClient();
 
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error("Unauthorized: Please log in.");
+
     const fileExt = imageFile.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${projectId}/${fileName}`;
+    const filePath = `${user.id}/${projectId}/${fileName}`;
 
     const { error: storageError } = await supabase.storage
       .from("project-updates")
@@ -29,6 +35,7 @@ export async function uploadSiteUpdate(formData: FormData) {
     const { error: dbError } = await supabase.from("site_updates").insert([
       {
         project_id: projectId,
+        user_id: user.id,
         title,
         description,
         image_url: urlData.publicUrl,
@@ -38,8 +45,7 @@ export async function uploadSiteUpdate(formData: FormData) {
 
     if (dbError) throw new Error(`Database: ${dbError.message}`);
 
-    revalidatePath("/dashboard/projects");
-    revalidatePath("/admin-dashboard/dashboard");
+    revalidatePath("/dashboard/dashboard");
 
     return { success: true, message: "Update posted successfully!" };
   } catch (error: any) {

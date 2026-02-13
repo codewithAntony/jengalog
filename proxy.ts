@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
           response = NextResponse.next({ request });
@@ -34,32 +34,13 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role || "client";
-
-    if (path.startsWith("/admin-dashboard") && role !== "admin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-
-    if (path === "/dashboard" && role === "admin") {
+    if (path.startsWith("/auth") || path === "/dashboard") {
       return NextResponse.redirect(
-        new URL("/admin-dashboard/dashboard", request.url),
+        new URL("/dashboard/dashboard", request.url),
       );
     }
-
-    if (path.startsWith("/auth")) {
-      const dest =
-        role === "admin" ? "/admin-dashboard/dashboard" : "/dashboard";
-      return NextResponse.redirect(new URL(dest, request.url));
-    }
   } else {
-    const isProtectedRoute =
-      path.startsWith("/admin-dashboard") || path.startsWith("/dashboard");
+    const isProtectedRoute = path.startsWith("/dashboard");
 
     if (isProtectedRoute) {
       return NextResponse.redirect(new URL("/auth", request.url));

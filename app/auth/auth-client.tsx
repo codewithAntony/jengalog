@@ -42,7 +42,7 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/admin-dashboard/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {
@@ -58,7 +58,7 @@ export default function AuthClientPage({ user }: AuthClientPageProps) {
       if (error) {
         setStatus(error.message);
       } else {
-        router.refresh();
+        router.push("/dashboard/dashboard");
       }
     }
     setIsLoading(false);

@@ -27,24 +27,12 @@ export async function GET(request: Request) {
       },
     );
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!authError && user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      const role = profile?.role || "client";
-
-      const redirectPath =
-        role === "admin" ? "/admin-dashboard/dashboard" : "/dashboard";
-
-      return NextResponse.redirect(new URL(redirectPath, origin));
+    if (!error) {
+      return NextResponse.redirect(
+        new URL("/admin-dashboard/dashboard", origin),
+      );
     }
   }
 
