@@ -21,6 +21,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import { convertBlobUrlToFile } from "@/lib/utils/convertBlobUrlToFile";
 import { uploadImage } from "@/lib/supabase/storage/client";
 import { toast } from "sonner";
+import Camera from "@/app/components/admin/Camera";
 
 type Step =
   | "DASHBOARD"
@@ -74,15 +75,49 @@ export default function ProjectPage() {
     fetchProjects();
   }, [supabase]);
 
-  const resetForm = () => {
-    setProjectName("");
-    setSelectedClientId("");
-    setNotes("");
-    setFolders(["General"]);
-    setImageUrls([]);
-    setEditingProjectId(null);
-    setCurrentStep("DASHBOARD");
-  };
+  // const resetForm = () => {
+  //   setProjectName("");
+  //   <div className="space-y-3">
+  //     <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
+  //       <User size={16} /> Assign to Registered Client
+  //     </label>
+  //     <select
+  //       value={selectedClientId}
+  //       onChange={(e) => setSelectedClientId(e.target.value)}
+  //       className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none appearance-none cursor-pointer"
+  //     >
+  //       <option value="">-- Choose Client --</option>
+  //       {availableClients.map((client) => (
+  //         <option key={client.id} value={client.id}>
+  //           {client.email}
+  //         </option>
+  //       ))}
+  //       <div className="space-y-3">
+  //         <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
+  //           <User size={16} /> Assign to Registered Client
+  //         </label>
+  //         <select
+  //           value={selectedClientId}
+  //           onChange={(e) => setSelectedClientId(e.target.value)}
+  //           className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none appearance-none cursor-pointer"
+  //         >
+  //           <option value="">-- Choose Client --</option>
+  //           {availableClients.map((client) => (
+  //             <option key={client.id} value={client.id}>
+  //               {client.email}
+  //             </option>
+  //           ))}
+  //         </select>
+  //       </div>
+  //     </select>
+  //   </div>;
+  //   setSelectedClientId("");
+  //   setNotes("");
+  //   setFolders(["General"]);
+  //   setImageUrls([]);
+  //   setEditingProjectId(null);
+  //   setCurrentStep("DASHBOARD");
+  // };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -358,7 +393,7 @@ export default function ProjectPage() {
                 <div className="space-y-8">
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest">
-                      Project Name
+                      Client Name
                     </label>
                     <input
                       autoFocus
@@ -368,7 +403,7 @@ export default function ProjectPage() {
                       className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-emerald-500 outline-none transition-all"
                     />
                   </div>
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
                       <User size={16} /> Assign to Registered Client
                     </label>
@@ -384,53 +419,80 @@ export default function ProjectPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
               {currentStep === "PLAN_SETUP" && (
-                <div className="text-center">
-                  <div
-                    onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-700 rounded-2xl p-12 hover:border-emerald-500 hover:bg-emerald-500/5 cursor-pointer transition-all"
-                  >
-                    <Upload size={48} className="mx-auto mb-4 text-gray-500" />
-                    <p className="text-lg font-medium">
-                      Click to upload images
-                    </p>
-                    <input
-                      type="file"
-                      ref={imageInputRef}
-                      multiple
-                      hidden
-                      onChange={handleImageChange}
-                      accept="image/*"
-                    />
-                  </div>
-                  <div className="mt-6 grid grid-cols-4 gap-2">
-                    {imageUrls.map((url, i) => (
-                      <div
-                        key={url}
-                        className="relative aspect-square rounded-lg overflow-hidden border border-gray-700"
-                      >
-                        <img
-                          src={url}
-                          className="w-full h-full object-cover"
-                          alt="preview"
+                <div className="space-y-8">
+                  {/** Take picture and upload */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center shadow-inner">
+                      <Camera
+                        onCapture={(url) =>
+                          setImageUrls((prev) => [...prev, url])
+                        }
+                      />
+                      {/* <p className="text-xs text-gray-500 mt-2 uppercase tracking-widest">
+                        Live Capture
+                      </p> */}
+                    </div>
+                    <div
+                      onClick={() => imageInputRef.current?.click()}
+                      className="bg-[#1a1a1a] border-2 border-dashed border-gray-700 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-50 hover:bg-emerald-500/5 transition-all group"
+                    >
+                      <div className="p-4 bg-gray-800 rounded-full mb-4 group-hover:bg-emerald-500/10 transition-colors">
+                        <Upload
+                          size={32}
+                          className="text-gray-500 group-hover:text-emerald-500"
                         />
-                        <button
-                          onClick={() =>
-                            setImageUrls((prev) =>
-                              prev.filter((_, idx) => idx !== i),
-                            )
-                          }
-                          className="absolute top-1 right-1 bg-red-500 rounded-full p-1"
-                        >
-                          <X size={12} />
-                        </button>
                       </div>
-                    ))}
+
+                      <span className="text-sm font-bold uppercase tracking-widest text-gray-300">
+                        Upload Files
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Select from your device
+                      </p>
+                      <input
+                        type="file"
+                        ref={imageInputRef}
+                        multiple
+                        hidden
+                        onChange={handleImageChange}
+                        accept="image/*"
+                      />
+                    </div>
                   </div>
+
+                  {imageUrls.length > 0 && (
+                    <div className="pt-4 border-t border-gray-800">
+                      <label className="text-[-10px] font-bold uppercase text-emerald-500 tracking-widest mb-3 block">
+                        Selected Images ({imageUrls.length})
+                      </label>
+
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                        {imageUrls.map((url, i) => (
+                          <div
+                            key={url}
+                            className="relative aspect-square rounded-lg overflow-hidden border border-gray-700 bg-black"
+                          >
+                            <img
+                              src={url}
+                              alt="preview"
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={() => removePreviewImage(i)}
+                              className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-500 text-white rounded-full p-1 transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

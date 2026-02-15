@@ -20,22 +20,22 @@ export interface SidebarItem {
 export const SidebarItems: SidebarItem[] = [
   {
     name: "Dashboard",
-    href: "/admin-dashboard/dashboard",
+    href: "/dashboard/dashboard",
     icon: House,
   },
   {
     name: "Add Employees",
-    href: "/admin-dashboard/add-employees",
+    href: "/dashboard/add-employees",
     icon: Mail,
   },
   {
     name: "Employees",
-    href: "/admin-dashboard/employees",
+    href: "/dashboard/employees",
     icon: Bell,
   },
   {
     name: "Updates",
-    href: "/admin-dashboard/post-update",
+    href: "/dashboard/post-update",
     icon: ShoppingBag,
   },
   // {
