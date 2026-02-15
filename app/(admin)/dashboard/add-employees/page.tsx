@@ -15,7 +15,7 @@ export default function page() {
       try {
         await createEmployee(formData);
         toast.success("Employee added and synced!");
-        router.push("/admin-dashboard/employees");
+        router.push("/dashboard/employees");
       } catch (error: any) {
         toast.error(error.message || "Failed to add employee");
       }

@@ -19,7 +19,7 @@ export default function AdminForm({ projects }: { projects: any[] }) {
     if (result.success) {
       toast.success(result.message, { id: toastId });
       setTimeout(() => {
-        router.push("/admin-dashboard/dashboard");
+        router.push("/dashboard");
       }, 1500);
     } else {
       setIsPending(false);
