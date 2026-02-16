@@ -44,6 +44,7 @@ export default function ProjectPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const supabase = getSupabaseBrowserClient();
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -64,60 +65,33 @@ export default function ProjectPage() {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (error) console.error("Error fetching projects:", error);
-      else if (data) setProjects(data);
+      if (user) {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) console.error("Error fetching projects:", error);
+        else if (data) setProjects(data);
+      }
     };
     fetchProjects();
   }, [supabase]);
 
-  // const resetForm = () => {
-  //   setProjectName("");
-  //   <div className="space-y-3">
-  //     <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
-  //       <User size={16} /> Assign to Registered Client
-  //     </label>
-  //     <select
-  //       value={selectedClientId}
-  //       onChange={(e) => setSelectedClientId(e.target.value)}
-  //       className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none appearance-none cursor-pointer"
-  //     >
-  //       <option value="">-- Choose Client --</option>
-  //       {availableClients.map((client) => (
-  //         <option key={client.id} value={client.id}>
-  //           {client.email}
-  //         </option>
-  //       ))}
-  //       <div className="space-y-3">
-  //         <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
-  //           <User size={16} /> Assign to Registered Client
-  //         </label>
-  //         <select
-  //           value={selectedClientId}
-  //           onChange={(e) => setSelectedClientId(e.target.value)}
-  //           className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none appearance-none cursor-pointer"
-  //         >
-  //           <option value="">-- Choose Client --</option>
-  //           {availableClients.map((client) => (
-  //             <option key={client.id} value={client.id}>
-  //               {client.email}
-  //             </option>
-  //           ))}
-  //         </select>
-  //       </div>
-  //     </select>
-  //   </div>;
-  //   setSelectedClientId("");
-  //   setNotes("");
-  //   setFolders(["General"]);
-  //   setImageUrls([]);
-  //   setEditingProjectId(null);
-  //   setCurrentStep("DASHBOARD");
-  // };
+  const resetForm = () => {
+    setProjectName("");
+    setSelectedClientId("");
+    setNotes("");
+    setFolders(["General"]);
+    setImageUrls([]);
+    setEditingProjectId(null);
+    setCurrentStep("DASHBOARD");
+  };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -172,14 +146,21 @@ export default function ProjectPage() {
 
   const removePreviewImage = (index: number) => {
     setImageUrls((prev) => prev.filter((_, i) => i !== index));
+    toast.info("Scan removed");
   };
 
   const handleClickUploadImagesButton = () => {
     startTransition(async () => {
-      const loadingToast = toast.loading(
-        editingProjectId ? "Updating project..." : "Creating Project...",
-      );
+      const loadingToast = toast.loading("Creating Project...");
       try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error("You must be logged in to save projects");
+          return;
+        }
+
         const finalImageUrls: string[] = [];
         for (const url of imageUrls) {
           if (url.startsWith("blob:")) {
@@ -201,7 +182,8 @@ export default function ProjectPage() {
 
         const projectData = {
           name: projectName,
-          client_id: selectedClientId,
+          user_id: user.id,
+          client_id: selectedClientId || null,
           client_name: selectedClient
             ? `${selectedClient.first_name} ${selectedClient.last_name}`
             : "Unassigned",
@@ -216,6 +198,7 @@ export default function ProjectPage() {
               .from("projects")
               .update(projectData)
               .eq("id", editingProjectId)
+              .eq("user_id", user.id) // Extra safety: ensure I own what I'm editing
               .select()
               .single()
           : await supabase
@@ -399,7 +382,7 @@ export default function ProjectPage() {
                       autoFocus
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
-                      placeholder="e.g. Riverside Apartment"
+                      placeholder="e.g. John Doe"
                       className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-emerald-500 outline-none transition-all"
                     />
                   </div>
@@ -429,6 +412,7 @@ export default function ProjectPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center shadow-inner">
                       <Camera
+                        mode="IMAGE"
                         onCapture={(url) =>
                           setImageUrls((prev) => [...prev, url])
                         }
@@ -475,7 +459,8 @@ export default function ProjectPage() {
                         {imageUrls.map((url, i) => (
                           <div
                             key={url}
-                            className="relative aspect-square rounded-lg overflow-hidden border border-gray-700 bg-black"
+                            className="relative aspect-square rounded-lg overflow-hidden border border-gray-700 bg-black cursor-pointer"
+                            onClick={() => setSelectedImageUrl(url)}
                           >
                             <img
                               src={url}
@@ -498,16 +483,76 @@ export default function ProjectPage() {
 
               {currentStep === "FOLDERS" && (
                 <div className="space-y-6">
-                  <label className="text-xs font-bold uppercase text-gray-500 tracking-widest">
-                    Project Notes
+                  <label className="text-xs font-bold uppercase text-gray-500 tracking-widest block">
+                    Project Documentation
                   </label>
-                  <textarea
-                    rows={6}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add specific instructions..."
-                    className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
-                  />
+
+                  <div className="relative w-full min-h-[200px] bg-[#1a1a1a] border border-gray-800 rounded-2xl p-6 overflow-hidden flex flex-col items-center justify-center group transition-all hover:bg-emerald-500/50">
+                    <Camera
+                      mode="SCAN"
+                      onCapture={(url) => {
+                        setImageUrls((prev) => [...prev, url]);
+                        toast.success("Note scanned successfully");
+                      }}
+                    />
+                    <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-2 group-hover:text-emerald-500 transition-colors">
+                      Scan handwritten Notes to PDF
+                    </p>
+                  </div>
+
+                  {/** Google Drive Gallery */}
+                  {imageUrls.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="tex-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em]">
+                          Scanned Documents ({imageUrls.length})
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {imageUrls.map((url, index) => (
+                          <div
+                            key={index}
+                            className="relative group bg-white p-1 rounded shadow-xl aspect-[3/4] overflow-hidden transition-transform hover:-translate-y-1 cursor-pointer"
+                            onClick={() => setSelectedImageUrl(url)}
+                          >
+                            <div className="w-full h-full bg-white border border-gray-200 overflow-hidden relative">
+                              <img
+                                src={url}
+                                alt={`Scan ${index}`}
+                                className="object-cover w-full h-full"
+                              />
+
+                              <button
+                                onClick={() => removePreviewImage(index)}
+                                className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              >
+                                <X size={12} />
+                              </button>
+                              <div className="absolute bottom-0 left-0 right-0 bg-emerald-600/90 py-1 px-2">
+                                <p className="text-[8px] text-white font-bold truncate tracking-tighter uppercase">
+                                  SCAN_{String(index + 1).padStart(3, "0")}.pdf
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase text-gray-500 tracking-widest">
+                      Additional Text Notes
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Type specific instructions or context for the scanned notes..."
+                      className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-sm focus:ring-1 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -546,6 +591,29 @@ export default function ProjectPage() {
                       : "Next Step"}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        {/** Lightbox Modal */}
+        {selectedImageUrl && (
+          <div
+            className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-200"
+            onClick={() => setSelectedImageUrl(null)}
+          >
+            <button
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              onClick={() => setSelectedImageUrl(null)}
+            >
+              <X size={24} />
+            </button>
+
+            <div className="relative max-w-5xl max-h-full flex items-center justify-center">
+              <img
+                src={selectedImageUrl}
+                alt="Full Preview"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
           </div>
         )}

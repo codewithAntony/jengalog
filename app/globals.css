@@ -85,3 +85,23 @@ video {
   max-width: 100%;
   height: auto;
 }
+
+/* Google Drive Scan UI Theme */
+.ReactCrop {
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+}
+
+.ReactCrop__crop-selection {
+  border: 3px solid #10b981 !important; /* The emerald green line */
+  box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.7) !important; /* Dims the table/background */
+}
+
+/* Make handles look like the "Corner Pins" in scanning apps */
+.ReactCrop__handle {
+  width: 24px !important;
+  height: 24px !important;
+  background-color: #10b981 !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 50% !important;
+}
