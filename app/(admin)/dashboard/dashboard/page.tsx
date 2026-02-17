@@ -198,7 +198,7 @@ export default function ProjectPage() {
               .from("projects")
               .update(projectData)
               .eq("id", editingProjectId)
-              .eq("user_id", user.id) // Extra safety: ensure I own what I'm editing
+              .eq("user_id", user.id)
               .select()
               .single()
           : await supabase
@@ -308,7 +308,6 @@ export default function ProjectPage() {
                     }}
                     className="group relative bg-[#1e1e1e] cursor-pointer rounded-xl overflow-hidden border border-gray-800"
                   >
-                    {/* Action Overlay Icons */}
                     <div className="absolute top-2 right-2 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => handleEditClick(e, project)}
@@ -386,23 +385,6 @@ export default function ProjectPage() {
                       className="w-full bg-transparent border-b-2 border-gray-800 py-3 text-2xl focus:border-emerald-500 outline-none transition-all"
                     />
                   </div>
-                  {/* <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                      <User size={16} /> Assign to Registered Client
-                    </label>
-                    <select
-                      value={selectedClientId}
-                      onChange={(e) => setSelectedClientId(e.target.value)}
-                      className="w-full bg-[#121212] border border-gray-700 rounded-xl p-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none appearance-none cursor-pointer"
-                    >
-                      <option value="">-- Choose Client --</option>
-                      {availableClients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.email}
-                        </option>
-                      ))}
-                    </select>
-                  </div> */}
                 </div>
               )}
 
@@ -417,9 +399,6 @@ export default function ProjectPage() {
                           setImageUrls((prev) => [...prev, url])
                         }
                       />
-                      {/* <p className="text-xs text-gray-500 mt-2 uppercase tracking-widest">
-                        Live Capture
-                      </p> */}
                     </div>
                     <div
                       onClick={() => imageInputRef.current?.click()}
@@ -600,12 +579,32 @@ export default function ProjectPage() {
             className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-200"
             onClick={() => setSelectedImageUrl(null)}
           >
-            <button
-              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-              onClick={() => setSelectedImageUrl(null)}
-            >
-              <X size={24} />
-            </button>
+            <div className="absolute top-6 right-6 flex gap-4">
+              {/** Delete Button */}
+              <button
+                className="p-3 bg-red-500/20 hover:bg-red-500 rounded-full text-white transition-all group"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const index = imageUrls.indexOf(selectedImageUrl);
+                  if (index > -1) {
+                    removePreviewImage(index);
+                    setSelectedImageUrl(null);
+                  }
+                }}
+              >
+                <Trash2
+                  size={24}
+                  className="group-hover:scale-110 transition-transform"
+                />
+              </button>
+
+              <button
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                onClick={() => setSelectedImageUrl(null)}
+              >
+                <X size={24} />
+              </button>
+            </div>
 
             <div className="relative max-w-5xl max-h-full flex items-center justify-center">
               <img
