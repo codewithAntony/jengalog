@@ -38,6 +38,11 @@ export const SidebarItems: SidebarItem[] = [
     href: "/dashboard/post-update",
     icon: ShoppingBag,
   },
+  {
+    name: "Invoices",
+    href: "/dashboard/invoices",
+    icon: ShoppingBag,
+  },
   // {
   //   name: "Clients",
   //   href: "/admin-dashboard/user",
