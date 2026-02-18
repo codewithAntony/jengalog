@@ -110,22 +110,123 @@ export default function ProjectPage() {
     setCurrentStep("VIEW_PROJECT");
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+  // const handleDeleteClick = (e: React.MouseEvent, id: string) => {
+  //   e.stopPropagation();
+
+  //   toast.warning(`Delete "${project.name}"?`, {
+  //     description: "Are you sure? This action cannot be undone.",
+  //     action: {
+  //       label: "Delete",
+  //       onClick: async () => {
+  //         const loadingToast = toast.loading("Deleting...")
+  //         try {
+  //           const { data: { user } } = await supabase.auth.getUser()
+  //           if (!user) throw new Error("Not authenticated")
+
+  //             if (project.image_urls && project.image_urls.length > 0) {
+  //               const filePaths = projectName.image_urls.map((url: string) => {
+  //                 const parts = url.split('/')
+  //                 return parts[parts.length - 1]
+  //               })
+
+  //               const { error: storageError } = await supabase.storage.from("jenga-log").remove(filePaths)
+
+  //               if (storageError) console.error("Storage cleanup warning:", storageError)
+  //             }
+
+  //             const { error: dbError } = await supabase.from("projects").delete().eq("id", project.id).eq("user_id", user.id)
+
+  //             if (dbError) throw dbError
+
+  //             setProjects((prev) => prev.filter((p) => p.id !== projectName.id))
+
+  //             if (currentStep === "VIEW_PROJECT") {
+  //               setCurrentStep("DASHBOARD")
+  //               setSelectedProject(null)
+  //             }
+
+  //             toast.success("Project and images deleted", { id: loadingToast })
+  //         } catch (error: any) {
+  //           console.error("Delete error:", error)
+  //           toast.error(error.message || "Failed to delete", { id: loadingToast })
+  //         }
+  //       },
+  //     },
+  //   })
+
+  //   // toast.warning("Delete Project", {
+  //   //   description: "Are you sure? This action cannot be undone.",
+  //   //   action: {
+  //   //     label: "Delete",
+  //   //     onClick: async () => {
+  //   //       const { error } = await supabase
+  //   //         .from("projects")
+  //   //         .delete()
+  //   //         .eq("id", id);
+  //   //       if (error) {
+  //   //         toast.error("Failed to delete project.");
+  //   //       } else {
+  //   //         setProjects((prev) => prev.filter((p) => p.id !== id));
+  //   //         toast.success("Project deleted successfully");
+  //   //       }
+  //   //     },
+  //   //   },
+  //   // });
+  // };
+
+  const handleDeleteClick = (e: React.MouseEvent, project: any) => {
     e.stopPropagation();
-    toast.warning("Delete Project", {
+
+    toast.warning(`Delete "${project.name}"?`, {
       description: "Are you sure? This action cannot be undone.",
       action: {
         label: "Delete",
         onClick: async () => {
-          const { error } = await supabase
-            .from("projects")
-            .delete()
-            .eq("id", id);
-          if (error) {
-            toast.error("Failed to delete project.");
-          } else {
-            setProjects((prev) => prev.filter((p) => p.id !== id));
-            toast.success("Project deleted successfully");
+          const loadingToast = toast.loading("Deleting...");
+          try {
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            // 1. Cleanup Storage
+            if (project.image_urls && project.image_urls.length > 0) {
+              const filePaths = project.image_urls.map((url: string) => {
+                const parts = url.split("/");
+                return parts[parts.length - 1]; // Extracts the filename
+              });
+
+              const { error: storageError } = await supabase.storage
+                .from("jenga-log")
+                .remove(filePaths);
+
+              if (storageError)
+                console.error("Storage cleanup warning:", storageError);
+            }
+
+            // 2. Delete from Database
+            const { error: dbError } = await supabase
+              .from("projects")
+              .delete()
+              .eq("id", project.id)
+              .eq("user_id", user.id);
+
+            if (dbError) throw dbError;
+
+            // 3. Update UI
+            setProjects((prev) => prev.filter((p) => p.id !== project.id));
+
+            if (currentStep === "VIEW_PROJECT") {
+              setCurrentStep("DASHBOARD");
+              setSelectedProject(null);
+            }
+
+            toast.success("Project and images deleted", { id: loadingToast });
+          } catch (error: any) {
+            console.error("Delete error:", error);
+            toast.error(error.message || "Failed to delete", {
+              id: loadingToast,
+            });
           }
         },
       },
@@ -316,7 +417,7 @@ export default function ProjectPage() {
                         <Pencil size={14} />
                       </button>
                       <button
-                        onClick={(e) => handleDeleteClick(e, project.id)}
+                        onClick={(e) => handleDeleteClick(e, project)}
                         className="p-2 bg-black/60 hover:bg-red-500 text-white rounded-full transition-colors shadow-lg"
                       >
                         <Trash2 size={14} />
@@ -333,27 +434,113 @@ export default function ProjectPage() {
                       />
                     </div>
                     <div className="p-3">
-                      <h3 className="font-semibold text-sm truncate">
-                        {project.name}
-                      </h3>
-                      <p className="text-[10px] text-gray-500 uppercase mt-1">
-                        {project.client_name || "No Client"}
-                      </p>
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-semibold text-sm truncate flex-1">
+                          {project.name}
+                        </h3>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {new Date(project.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                        </span>
+                      </div>
+
+                      {project.client_name &&
+                        project.client_name !== "Unassigned" && (
+                          <p className="text-[10px] text-gray-500 uppercase mt-1">
+                            {project.client_name}
+                          </p>
+                        )}
                     </div>
                   </div>
                 ))}
             </div>
           </div>
         ) : currentStep === "VIEW_PROJECT" ? (
-          <div className="max-w-5xl mx-auto">
-            <button
-              onClick={() => setCurrentStep("DASHBOARD")}
-              className="text-emerald-500 mb-6 flex items-center gap-2"
-            >
-              ← Back
-            </button>
-            <h1 className="text-4xl font-bold mb-4">{selectedProject?.name}</h1>
-            <p className="text-gray-400 mb-8">{selectedProject?.notes}</p>
+          <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center mb-8">
+              <button
+                onClick={() => {
+                  setSelectedProject(null);
+                  setCurrentStep("DASHBOARD");
+                }}
+                className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors uppercase tracking-widest text-xs mb-6 flex items-center gap-2"
+              >
+                ← Back to Projects
+              </button>
+              <div className="text-right">
+                <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em]">
+                  Created On
+                </p>
+                <p className="text-sm font-medium">
+                  {new Date(selectedProject?.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/** Sidebar details */}
+              <div className="lg:col-span-1 space-y-8">
+                <div>
+                  <h1 className="text-4xl font-black text-white mb-2 leading-tight">
+                    {selectedProject?.name}
+                  </h1>
+                  {selectedProject?.client_name &&
+                    selectedProject?.client_name !== "Unassigned" && (
+                      <div className="inline-block px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">
+                          Client: {selectedProject?.client_name}
+                        </p>
+                      </div>
+                    )}
+                </div>
+
+                <div className="bg-[#1e1e1e] border border-gray-800 rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Pencil size={14} /> Project Notes
+                  </h3>
+                  <p className="text-gray-300 leading-relaxed tex-sm whitespace-pre-wrap">
+                    {selectedProject?.note ||
+                      "No additional notes provided for this project."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="lg:col-span-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">
+                  Documentation & Scans (
+                  {selectedProject?.image_url?.length || 0})
+                </h3>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {selectedProject?.image_urls?.map(
+                    (url: string, idx: number) => (
+                      <div
+                        key={idx}
+                        onClick={() => setSelectedImageUrl(url)}
+                        className="group relative aspect-[3/4] bg-black rounded-xl overflow-hidden border border-gray-800 cursor-pointer hover:border-emerald-500/50 transition-all shadow-lg"
+                      >
+                        <img
+                          src={url}
+                          alt={`Project detail ${idx}`}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                          <p className="text-[10px] text-white font-bold uppercase tracking-tighter">
+                            View Full Scan
+                          </p>
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center pt-4">
