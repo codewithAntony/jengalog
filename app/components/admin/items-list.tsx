@@ -3,26 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import React from "react";
 import InvoiceItem from "./invoice-item";
-
-export const items = [
-  {
-    id: "1",
-    description: "Website Design",
-    quantity: 1,
-    rate: 500,
-    amount: 500,
-  },
-  {
-    id: "2",
-    description: "Hosting (12 months)",
-    quantity: 1,
-    rate: 120,
-    amount: 120,
-  },
-];
+import { useInvoice } from "@/context/invoice-context";
 
 export default function ItemsList() {
-  const addItem = () => {};
+  const { invoice, addItem } = useInvoice();
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -33,12 +18,12 @@ export default function ItemsList() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {items.map((item, index) => (
+        {invoice.items.map((item, index) => (
           <InvoiceItem
             key={item.id}
             item={item}
             index={index}
-            canRemove={items.length > 1}
+            canRemove={invoice.items.length > 1}
           />
         ))}
       </CardContent>

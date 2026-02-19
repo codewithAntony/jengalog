@@ -10,7 +10,7 @@ export default function page() {
   const [showPreview, setShowPreview] = useState(false);
 
   if (showPreview) {
-    return <InvoicePreview />;
+    return <InvoicePreview onBack={() => setShowPreview(false)} />;
   }
 
   return (
