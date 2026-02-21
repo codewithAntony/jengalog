@@ -12,8 +12,10 @@ export default function BasicDetails() {
         <CardTitle>Invoice Details</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="invoiceNumber">Invoice Number</Label>
+        <div className="mb-2">
+          <Label htmlFor="invoiceNumber" className="mb-2">
+            Invoice Number
+          </Label>
           <Input
             value={invoice.invoiceNumber}
             onChange={(e) => updateInvoice({ invoiceNumber: e.target.value })}
@@ -21,7 +23,9 @@ export default function BasicDetails() {
           />
         </div>
         <div>
-          <Label htmlFor="date">Date</Label>
+          <Label htmlFor="date" className="mb-2">
+            Date
+          </Label>
           <Input
             id="date"
             type="date"
@@ -29,7 +33,6 @@ export default function BasicDetails() {
             value={invoice.date}
           />
         </div>
-        <p>Card Content</p>
       </CardContent>
     </Card>
   );

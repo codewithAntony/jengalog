@@ -21,15 +21,22 @@ export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-[#121212] p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Income Preview</h1>
-          <div className="space-x-2">
-            <Button variant="outline" onClick={onBack}>
+          <h1 className="text-2xl font-bold text-gray-100">Income Preview</h1>
+          <div className="flex justify-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="bg-emerald-500 hover:bg-emerald-500 disabled:bg-emerald-800 text-[#05130d] "
+            >
               Back to Edit
             </Button>
-            <Button onClick={handleDownloadPDF}>
+            <Button
+              onClick={handleDownloadPDF}
+              className="bg-emerald-500 hover:bg-emerald-500 disabled:bg-emerald-800 text-[#05130d] "
+            >
               <Download className="w-4 h-4 mr-2" />
               Download PDF
             </Button>

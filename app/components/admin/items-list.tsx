@@ -12,7 +12,11 @@ export default function ItemsList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Invoice Items</CardTitle>
-        <Button onClick={addItem} size="sm">
+        <Button
+          onClick={addItem}
+          size="sm"
+          className="bg-emerald-500 hover:bg-emerald-500 disabled:bg-emerald-800 text-[#05130d] "
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Item
         </Button>
