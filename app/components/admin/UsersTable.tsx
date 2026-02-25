@@ -34,7 +34,7 @@ const UsersTable = () => {
   const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase())
+      client.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -72,7 +72,7 @@ const UsersTable = () => {
                   >
                     {header}
                   </th>
-                )
+                ),
               )}
             </tr>
           </thead>
@@ -86,7 +86,6 @@ const UsersTable = () => {
                 transition={{ delay: index * 0.1, duration: 0.3 }}
                 className="flex flex-col sm:table-row mb-4 sm:mb-0 border-b sm:border-b-0 border-gray-700 sm:border-none p-2 sm:p-0"
               >
-                {/** Mobile view */}
                 <td className="sm:hidden px-3 py-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -123,7 +122,6 @@ const UsersTable = () => {
                   </div>
                 </td>
 
-                {/** Desktop view */}
                 <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <Image
