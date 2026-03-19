@@ -1,3 +1,13 @@
+export type InvoiceStatus = "Paid" | "Pending" | "Overdue";
+
+export interface Invoice {
+  id: string;
+  client: string;
+  project: string;
+  amount: string;
+  status: InvoiceStatus;
+}
+
 export interface InvoiceItem {
   id: string;
   description: string;

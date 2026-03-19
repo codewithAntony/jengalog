@@ -1,5 +1,7 @@
 // "use client";
 
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useInvoice } from "@/context/invoice-context";
@@ -14,10 +16,33 @@ interface InvoicePreviewProps {
 
 export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
   const { invoice } = useInvoice();
+  const router = useRouter();
   // const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const handleDownloadPDF = () => {
     generatePDF(invoice);
+  };
+
+  const handleSaveInvoice = async () => {
+    const { data, error } = await supabase.from("invoices").insert([
+      {
+        invoice_number: invoice.invoiceNumber,
+        from_name: invoice.fromEmail,
+        to_name: invoice.toName,
+        to_email: invoice.toEmail,
+        tax_rate: invoice.taxRate,
+        sub_total: invoice.subTotal,
+        total: invoice.total,
+        status: "Pending",
+      },
+    ]);
+
+    if (error) {
+      console.error("Error saving:", error.message);
+      alert("Failed to save invoice");
+    } else {
+      router.push("/dashboard/invoices");
+    }
   };
 
   return (
@@ -39,6 +64,12 @@ export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
             >
               <Download className="w-4 h-4 mr-2" />
               Download PDF
+            </Button>
+            <Button
+              onClick={handleSaveInvoice}
+              className="bg-emerald-500 hover:bg-emerald-500 disabled:bg-emerald-800 text-[#05130d] "
+            >
+              Save
             </Button>
           </div>
         </div>
@@ -91,16 +122,14 @@ export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
                     <td className="py-2">{item.description}</td>
                     <td className="py-2 text-center">{item.quantity}</td>
                     <td className="py-2 text-right">
-                      $
-                      {typeof item.rate === "number"
-                        ? item.rate.toFixed(2)
-                        : "0.00"}
+                      {`Kes ${
+                        typeof item.rate === "number"
+                          ? item.rate.toFixed(2)
+                          : "0.00"
+                      }`}
                     </td>
                     <td className="py-2 text-right">
-                      $
-                      {typeof item.amount === "number"
-                        ? item.amount.toFixed(2)
-                        : "0.00"}
+                      {`Kes ${typeof item.amount === "number" ? item.amount.toFixed(2) : "0.00"}`}
                     </td>
                   </tr>
                 ))}
@@ -111,19 +140,19 @@ export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
               <div className="w-64 space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span>${invoice.subTotal.toFixed(2)}</span>
+                  <span>Kes {invoice.subTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>
                     Tax ({" "}
                     {typeof invoice.taxRate === "number" ? invoice.taxRate : 0}{" "}
-                    %):
+                    Kes):
                   </span>
-                  <span>${invoice.taxAmount.toFixed(2)}</span>
+                  <span>Kes {invoice.taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2">
                   <span>Total:</span>
-                  <span>${invoice.total.toFixed(2)}</span>
+                  <span>Kes {invoice.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
