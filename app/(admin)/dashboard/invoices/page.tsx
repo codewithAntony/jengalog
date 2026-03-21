@@ -1,6 +1,8 @@
 "use client";
 
+import StatusDropdown from "@/app/components/admin/StatusDropdown";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 // const invoices: Invoice[] = [
@@ -63,37 +65,26 @@ const InvoiceTable = () => {
                   <td className="px-6 py-4 font-medium text-blue-600">
                     {inv.invoice_number}
                   </td>
-                  <td className="px-6 py-4">{inv.to_name}</td>
-                  <td className="px-6 py-4">Project Alpha</td>
-                  <td className="px-6 py-4 font-semibold">
+                  <td className="px-6 py-4 text-gray-700">{inv.to_name}</td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {inv.project || "General"}
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-gray-900">
                     Kes {inv.total.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className="px-3 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center justify-center gap-1
-                                        ${
-                                          inv.status === "Pending"
-                                            ? "bg-yellow-100 text-yellow-700"
-                                            : inv.status === "Paid"
-                                              ? "bg-green-100 text-green-700"
-                                              : "bg-red-100 text-red-700"
-                                        }`}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full ${inv.status === "Pending" ? "bg-yellow-500" : "bg-green-500"}`}
-                      />
-                      {inv.status}
-                    </span>
+                    <StatusDropdown
+                      invoiceId={inv.id}
+                      currentStatus={inv.status}
+                    />
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-900 transition-colors">
+                    <Link
+                      href={`/dashboard/invoice-details/${inv.id}`}
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-900"
+                    >
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
