@@ -57,7 +57,7 @@ const InvoiceTable = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {invoices.map((inv) => (
+              {/* {invoices.map((inv) => (
                 <tr
                   key={inv.id}
                   className="bg-white hover:bg-gray-50 transition-colors"
@@ -87,7 +87,51 @@ const InvoiceTable = () => {
                     </Link>
                   </td>
                 </tr>
-              ))}
+              ))} */}
+
+              {invoices.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-10 text-center text-gray-500"
+                  >
+                    No invoices found.
+                  </td>
+                </tr>
+              ) : (
+                invoices.map((inv) => (
+                  <tr
+                    key={inv.id}
+                    className="bg-white hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium text-blue-600">
+                      {inv.invoice_number}
+                    </td>
+                    <td className="px-6 py-4 text-gray-700">{inv.to_name}</td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {inv.project || "General"}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-gray-900">
+                      Kes {Number(inv.total).toFixed(2)}
+                    </td>
+                    \
+                    <td className="px-6 py-4 text-center">
+                      <StatusDropdown
+                        invoiceId={inv.id}
+                        currentStatus={inv.status}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/dashboard/invoice-details/${inv.id}`}
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-900"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

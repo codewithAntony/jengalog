@@ -24,24 +24,44 @@ export default function InvoicePreview({ onBack }: InvoicePreviewProps) {
   };
 
   const handleSaveInvoice = async () => {
-    const { data, error } = await supabase.from("invoices").insert([
-      {
-        invoice_number: invoice.invoiceNumber,
-        from_name: invoice.fromEmail,
-        to_name: invoice.toName,
-        to_email: invoice.toEmail,
-        tax_rate: invoice.taxRate,
-        sub_total: invoice.subTotal,
-        total: invoice.total,
-        status: "Pending",
-      },
-    ]);
+    try {
+      const { data: newInvoice, error: invError } = await supabase
+        .from("invoices")
+        .insert([
+          {
+            invoice_number: invoice.invoiceNumber,
+            from_name: invoice.fromEmail,
+            to_name: invoice.toName,
+            to_email: invoice.toEmail,
+            tax_rate: invoice.taxRate,
+            sub_total: invoice.subTotal,
+            total: invoice.total,
+            status: "Pending",
+          },
+        ])
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error saving:", error.message);
-      alert("Failed to save invoice");
-    } else {
+      if (invError) throw invError;
+
+      const itemsToInsert = invoice.items.map((item: any) => ({
+        invoice_id: newInvoice.id,
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.amount,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("invoice_items")
+        .insert(itemsToInsert);
+
+      if (itemsError) throw itemsError;
+
       router.push("/dashboard/invoices");
+    } catch (error: any) {
+      console.error("Save failed:", error.message);
+      alert("Error saving: " + error.message);
     }
   };
 
