@@ -17,6 +17,7 @@ import {
   Search,
   User,
 } from "lucide-react";
+import localforage from "localforage";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import { convertBlobUrlToFile } from "@/lib/utils/convertBlobUrlToFile";
 import { uploadImage } from "@/lib/supabase/storage/client";
@@ -68,20 +69,101 @@ export default function ProjectPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (!user) return;
 
-      if (user) {
-        const { data, error } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+      const { data: onlineData, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-        if (error) console.error("Error fetching projects:", error);
-        else if (data) setProjects(data);
+      const offlineData: any[] =
+        (await localforage.getItem("offline_projects")) || [];
+
+      if (onlineData) {
+        setProjects([...offlineData, ...onlineData]);
+      } else {
+        setProjects(offlineData);
       }
     };
     fetchProjects();
   }, [supabase]);
+
+  useEffect(() => {
+    const handleSyncTrigger = () => {
+      if (navigator.onLine) {
+        toast.info("Connection restored! Syncing pending logs...");
+        syncOfflineProjects();
+      }
+    };
+
+    window.addEventListener("online", handleSyncTrigger);
+    return () => window.removeEventListener("online", handleSyncTrigger);
+  }, []);
+
+  const syncOfflineProjects = async () => {
+    const offlineQueue: any[] =
+      (await localforage.getItem("offline_projects")) || [];
+    if (offlineQueue.length === 0) return;
+
+    const loadingToast = toast.loading(
+      `Syncing ${offlineQueue.length} projects to Jenga Log...`,
+    );
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("User session not found");
+
+      for (const project of offlineQueue) {
+        const finalImageUrls: string[] = [];
+
+        for (const imageData of project.image_urls) {
+          const res = await fetch(imageData);
+          const blob = await res.blob();
+          const file = new File([blob], `sync_${Date.now()}.jpg`, {
+            type: "image/jpeg",
+          });
+
+          const { imageUrl, error } = await uploadImage({
+            file: file,
+            bucket: "jenga-log",
+          });
+
+          if (error) throw new Error(`Storage Error: ${error}`);
+          finalImageUrls.push(imageUrl);
+        }
+
+        const { error: dbError } = await supabase.from("projects").insert([
+          {
+            ...project,
+            user_id: user.id,
+            image_url: finalImageUrls[0],
+            image_urls: finalImageUrls,
+            isOffline: false,
+          },
+        ]);
+
+        if (dbError) throw dbError;
+      }
+      await localforage.setItem("offline_projects", []);
+
+      const { data: freshData } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setProjects(freshData || []);
+      toast.success("All offline projects synced!", { id: loadingToast });
+    } catch (err: any) {
+      console.error("Sync Error:", err);
+      toast.error(`Sync failed. Will try again later: ${err.message}`, {
+        id: loadingToast,
+      });
+    }
+  };
 
   const resetForm = () => {
     setProjectName("");
@@ -110,70 +192,6 @@ export default function ProjectPage() {
     setCurrentStep("VIEW_PROJECT");
   };
 
-  // const handleDeleteClick = (e: React.MouseEvent, id: string) => {
-  //   e.stopPropagation();
-
-  //   toast.warning(`Delete "${project.name}"?`, {
-  //     description: "Are you sure? This action cannot be undone.",
-  //     action: {
-  //       label: "Delete",
-  //       onClick: async () => {
-  //         const loadingToast = toast.loading("Deleting...")
-  //         try {
-  //           const { data: { user } } = await supabase.auth.getUser()
-  //           if (!user) throw new Error("Not authenticated")
-
-  //             if (project.image_urls && project.image_urls.length > 0) {
-  //               const filePaths = projectName.image_urls.map((url: string) => {
-  //                 const parts = url.split('/')
-  //                 return parts[parts.length - 1]
-  //               })
-
-  //               const { error: storageError } = await supabase.storage.from("jenga-log").remove(filePaths)
-
-  //               if (storageError) console.error("Storage cleanup warning:", storageError)
-  //             }
-
-  //             const { error: dbError } = await supabase.from("projects").delete().eq("id", project.id).eq("user_id", user.id)
-
-  //             if (dbError) throw dbError
-
-  //             setProjects((prev) => prev.filter((p) => p.id !== projectName.id))
-
-  //             if (currentStep === "VIEW_PROJECT") {
-  //               setCurrentStep("DASHBOARD")
-  //               setSelectedProject(null)
-  //             }
-
-  //             toast.success("Project and images deleted", { id: loadingToast })
-  //         } catch (error: any) {
-  //           console.error("Delete error:", error)
-  //           toast.error(error.message || "Failed to delete", { id: loadingToast })
-  //         }
-  //       },
-  //     },
-  //   })
-
-  //   // toast.warning("Delete Project", {
-  //   //   description: "Are you sure? This action cannot be undone.",
-  //   //   action: {
-  //   //     label: "Delete",
-  //   //     onClick: async () => {
-  //   //       const { error } = await supabase
-  //   //         .from("projects")
-  //   //         .delete()
-  //   //         .eq("id", id);
-  //   //       if (error) {
-  //   //         toast.error("Failed to delete project.");
-  //   //       } else {
-  //   //         setProjects((prev) => prev.filter((p) => p.id !== id));
-  //   //         toast.success("Project deleted successfully");
-  //   //       }
-  //   //     },
-  //   //   },
-  //   // });
-  // };
-
   const handleDeleteClick = (e: React.MouseEvent, project: any) => {
     e.stopPropagation();
 
@@ -189,7 +207,6 @@ export default function ProjectPage() {
             } = await supabase.auth.getUser();
             if (!user) throw new Error("Not authenticated");
 
-            // 1. Cleanup Storage
             if (project.image_urls && project.image_urls.length > 0) {
               const filePaths = project.image_urls.map((url: string) => {
                 const parts = url.split("/");
@@ -204,7 +221,6 @@ export default function ProjectPage() {
                 console.error("Storage cleanup warning:", storageError);
             }
 
-            // 2. Delete from Database
             const { error: dbError } = await supabase
               .from("projects")
               .delete()
@@ -213,7 +229,6 @@ export default function ProjectPage() {
 
             if (dbError) throw dbError;
 
-            // 3. Update UI
             setProjects((prev) => prev.filter((p) => p.id !== project.id));
 
             if (currentStep === "VIEW_PROJECT") {
@@ -252,77 +267,139 @@ export default function ProjectPage() {
 
   const handleClickUploadImagesButton = () => {
     startTransition(async () => {
-      const loadingToast = toast.loading("Creating Project...");
+      const isOffline = !navigator.onLine;
+      const loadingToast = toast.loading(
+        isOffline
+          ? "Saving to device (Offline)..."
+          : "Uploading to Jenga Log...",
+      );
+
       try {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error("You must be logged in to save projects");
-          return;
-        }
-
-        const finalImageUrls: string[] = [];
-        for (const url of imageUrls) {
-          if (url.startsWith("blob:")) {
-            const imageFile = await convertBlobUrlToFile(url);
-            const { imageUrl, error } = await uploadImage({
-              file: imageFile,
-              bucket: "jenga-log",
-            });
-            if (error) throw new Error(error);
-            finalImageUrls.push(imageUrl);
-          } else {
-            finalImageUrls.push(url);
-          }
-        }
-
-        const selectedClient = availableClients.find(
-          (c) => c.id === selectedClientId,
-        );
 
         const projectData = {
           name: projectName,
-          user_id: user.id,
+          user_id: user?.id,
           client_id: selectedClientId || null,
-          client_name: selectedClient
-            ? `${selectedClient.first_name} ${selectedClient.last_name}`
-            : "Unassigned",
           notes: notes,
-          image_url: finalImageUrls[0] || "https://via.placeholder.com/400",
-          image_urls: finalImageUrls,
-          folders: folders,
+          images_urls: imageUrls,
+          created_at: new Date().toISOString(),
         };
 
-        const { data, error } = editingProjectId
-          ? await supabase
-              .from("projects")
-              .update(projectData)
-              .eq("id", editingProjectId)
-              .eq("user_id", user.id)
-              .select()
-              .single()
-          : await supabase
-              .from("projects")
-              .insert([projectData])
-              .select()
-              .single();
+        if (isOffline) {
+          const offlineQueue: any[] =
+            (await localforage.getItem("offline_projects")) || [];
 
-        if (error) throw error;
+          const persistentImages = await Promise.all(
+            imageUrls.map(async (url) => {
+              const res = await fetch(url);
+              const blob = await res.blob();
+              return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+              });
+            }),
+          );
 
-        setProjects((prev) =>
-          editingProjectId
-            ? prev.map((p) => (p.id === data.id ? data : p))
-            : [data, ...prev],
-        );
+          const offlineProject = {
+            ...projectData,
+            image_urls: persistentImages,
+            isOffline: true,
+          };
+          await localforage.setItem("offline_projects", [
+            ...offlineQueue,
+            offlineProject,
+          ]);
 
-        toast.success(
-          editingProjectId ? "Project updated!" : "Project created!",
-          { id: loadingToast },
-        );
-        resetForm();
+          toast.success(
+            "Project saved to phone memory. Will sync when online. Will sync when online.",
+            { id: loadingToast },
+          );
+          resetForm();
+          return;
+        }
+
+        startTransition(async () => {
+          const loadingToast = toast.loading("Creating Project...");
+          try {
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
+            if (!user) {
+              toast.error("You must be logged in to save projects");
+              return;
+            }
+
+            const finalImageUrls: string[] = [];
+            for (const url of imageUrls) {
+              if (url.startsWith("blob:")) {
+                const imageFile = await convertBlobUrlToFile(url);
+                const { imageUrl, error } = await uploadImage({
+                  file: imageFile,
+                  bucket: "jenga-log",
+                });
+                if (error) throw new Error(error);
+                finalImageUrls.push(imageUrl);
+              } else {
+                finalImageUrls.push(url);
+              }
+            }
+
+            const selectedClient = availableClients.find(
+              (c) => c.id === selectedClientId,
+            );
+
+            const projectData = {
+              name: projectName,
+              user_id: user.id,
+              client_id: selectedClientId || null,
+              client_name: selectedClient
+                ? `${selectedClient.first_name} ${selectedClient.last_name}`
+                : "Unassigned",
+              notes: notes,
+              image_url: finalImageUrls[0] || "https://via.placeholder.com/400",
+              image_urls: finalImageUrls,
+              folders: folders,
+            };
+
+            const { data, error } = editingProjectId
+              ? await supabase
+                  .from("projects")
+                  .update(projectData)
+                  .eq("id", editingProjectId)
+                  .eq("user_id", user.id)
+                  .select()
+                  .single()
+              : await supabase
+                  .from("projects")
+                  .insert([projectData])
+                  .select()
+                  .single();
+
+            if (error) throw error;
+
+            setProjects((prev) =>
+              editingProjectId
+                ? prev.map((p) => (p.id === data.id ? data : p))
+                : [data, ...prev],
+            );
+
+            toast.success(
+              editingProjectId ? "Project updated!" : "Project created!",
+              { id: loadingToast },
+            );
+            resetForm();
+          } catch (error: any) {
+            toast.error(error.message || "An error occurred", {
+              id: loadingToast,
+            });
+          }
+        });
       } catch (error: any) {
-        toast.error(error.message || "An error occurred", { id: loadingToast });
+        toast.error(error.message || "Save failed", { id: loadingToast });
       }
     });
   };
@@ -484,7 +561,6 @@ export default function ProjectPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-              {/** Sidebar details */}
               <div className="lg:col-span-1 space-y-8">
                 <div>
                   <h1 className="text-4xl font-black text-white mb-2 leading-tight">
@@ -577,7 +653,6 @@ export default function ProjectPage() {
 
               {currentStep === "PLAN_SETUP" && (
                 <div className="space-y-8">
-                  {/** Take picture and upload */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 flex flex-col items-center justify-center shadow-inner">
                       <Camera
@@ -666,7 +741,6 @@ export default function ProjectPage() {
                     </p>
                   </div>
 
-                  {/** Google Drive Gallery */}
                   {imageUrls.length > 0 && (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
@@ -760,14 +834,13 @@ export default function ProjectPage() {
             </div>
           </div>
         )}
-        {/** Lightbox Modal */}
+
         {selectedImageUrl && (
           <div
             className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-200"
             onClick={() => setSelectedImageUrl(null)}
           >
             <div className="absolute top-6 right-6 flex gap-4">
-              {/** Delete Button */}
               <button
                 className="p-3 bg-red-500/20 hover:bg-red-500 rounded-full text-white transition-all group"
                 onClick={(e) => {

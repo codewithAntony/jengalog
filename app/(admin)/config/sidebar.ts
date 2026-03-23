@@ -7,6 +7,9 @@ import {
   Settings,
   ShoppingBag,
   ShoppingCart,
+  RefreshCcw,
+  Clipboard,
+  ClipboardList,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -23,30 +26,30 @@ export const SidebarItems: SidebarItem[] = [
     href: "/dashboard/dashboard",
     icon: House,
   },
-  {
-    name: "Add Employees",
-    href: "/dashboard/add-employees",
-    icon: Mail,
-  },
-  {
-    name: "Employees",
-    href: "/dashboard/employees",
-    icon: Bell,
-  },
+  // {
+  //   name: "Add Employees",
+  //   href: "/dashboard/add-employees",
+  //   icon: Mail,
+  // },
+  // {
+  //   name: "Employees",
+  //   href: "/dashboard/employees",
+  //   icon: Bell,
+  // },
   {
     name: "Updates",
     href: "/dashboard/post-update",
-    icon: ShoppingBag,
+    icon: RefreshCcw,
   },
   {
     name: "Invoices",
     href: "/dashboard/invoices",
-    icon: ShoppingBag,
+    icon: Clipboard,
   },
   {
     name: "Invoices Details",
     href: "/dashboard/invoice-details",
-    icon: ShoppingBag,
+    icon: ClipboardList,
   },
   // {
   //   name: "Clients",
